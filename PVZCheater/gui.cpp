@@ -57,8 +57,7 @@ void gui::init() {
     //IM_ASSERT(font != nullptr);
 
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
+    bool show_demo_window = false;
     auto bgColor = ImColor(0,0,0);
     ImVec4 clear_color = ImVec4(bgColor);
     SetLayeredWindowAttributes(hwnd, bgColor, NULL, LWA_COLORKEY);
@@ -256,11 +255,16 @@ void mainGui()
         {
             static bool SunCntNotDecrease = false;
             static bool autoSunCollect = false;
+            static bool cardNoCD = false;
             static bool plantNoCD = false;
             static bool plantCasually = false;
             static bool noPause = false;
             static bool zombieFreeze = false;
             static bool seckillBullet = false;
+            static bool plantNoSleep = false;
+            static bool randomBullet = false;
+
+            static int slotCount = 0;
 
             ImGui::SeparatorText("Basic Part");
 
@@ -271,7 +275,23 @@ void mainGui()
             if (ImGui::DragInt("Sun", &sunCount, 25, 0, 8000)) pvzServ->SetSunCount(sunCount);
             else sunCount = pvzServ->GetSunCount();
 
-            if (ImGui::BeginTable("CheckTable", 3))
+            slotCount = pvzServ->GetSlotCount();
+            static int curSlot = 0;
+            static int curSlotCode = pvzServ->GetSlotCodeByIdx(curSlot);
+            static char const* const slotIdxArr[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.3f);
+            if (ImGui::Combo("Slot", &curSlot, slotIdxArr, slotCount)) curSlotCode = pvzServ->GetSlotCodeByIdx(curSlot);
+            if (slotCount > 0) {
+                ImGui::SameLine();
+                if (ImGui::InputInt("##3", &curSlotCode)) {
+                    if (curSlotCode > 74) curSlotCode = 0;
+                    else if (curSlotCode < 0) curSlotCode = 74;
+                    pvzServ->SetSlotCodeByIdx(curSlot, curSlotCode);
+                }
+            }
+            ImGui::PopItemWidth();
+
+            if (ImGui::BeginTable("BasicTable", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
@@ -279,6 +299,7 @@ void mainGui()
                 ImGui::TableSetColumnIndex(1);
                 if (ImGui::Checkbox("No Pause", &noPause)) pvzServ->ToggleNoPause(noPause);
                 ImGui::TableSetColumnIndex(2);
+                if (ImGui::Checkbox("Card No CD", &cardNoCD)) pvzServ->ToggleCardNoCD(cardNoCD);
                 ImGui::EndTable();
             }
 
@@ -300,6 +321,11 @@ void mainGui()
                 if (ImGui::Checkbox("Plant Casually", &plantCasually)) pvzServ->TogglePlantAnywhere(plantCasually);
                 ImGui::TableSetColumnIndex(2);
                 if (ImGui::Checkbox("Seckill bullet", &seckillBullet)) pvzServ->ToggleSeckillBullet(seckillBullet);
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                if (ImGui::Checkbox("Plant no sleep", &plantNoSleep)) pvzServ->TogglePlantNoSleep(plantNoSleep);
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Checkbox("Random bullet", &randomBullet)) pvzServ->TogglePlantRandomBullet(randomBullet);
                 ImGui::EndTable();
             }
 
@@ -326,6 +352,8 @@ void mainGui()
                 if (ImGui::Button("All Freeze", ImVec2(-1, 0))) pvzServ->FreezeAllZombie();
                 ImGui::TableSetColumnIndex(1);
                 if (ImGui::Button("All Kill", ImVec2(-1, 0))) pvzServ->KillAllZombie();
+                ImGui::TableSetColumnIndex(2);
+                if (ImGui::Button("Blow All", ImVec2(-1, 0))) pvzServ->BlowAllZombie();
 
                 ImGui::EndTable();
             }

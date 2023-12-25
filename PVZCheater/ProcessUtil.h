@@ -37,7 +37,7 @@ public:
 	*/
 	template<typename T>
 	static T Read(HANDLE pHandle, QWORD address) {
-		T _read = 0;
+		T _read;
 		ReadProcessMemory(pHandle, (LPVOID)address, &_read, sizeof(T), NULL);
 		return _read;
 	}

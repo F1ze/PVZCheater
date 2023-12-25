@@ -1,6 +1,12 @@
 #pragma once
 #include "pch.h"
 
+struct DLLStatus {
+	DLLStatus() {
+		MH_Initialize();
+	}
+};
+
 struct AddPlantParam
 {
 	DWORD row;
@@ -23,3 +29,15 @@ EXPORT void AddZombie(AddZombieParam* param);
 
 EXPORT void FreezeAllZombie();
 EXPORT void KillAllZombie();
+
+
+struct GetNextZombieParam
+{
+	DWORD retValue;
+	DWORD startAddress;
+	GetNextZombieParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
+};
+
+EXPORT void GetNextZombie(GetNextZombieParam *param);
+
+EXPORT void RandomBullet(bool* flag);

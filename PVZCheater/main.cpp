@@ -8,6 +8,6 @@ int WINAPI WinMain(
     _In_  int nCmdShow
 ) {
     gui::init();
-    
+    logger::init();
     return 0;
 }

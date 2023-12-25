@@ -20,6 +20,8 @@ Minus Sun: 0041E846
 
 Sun Count = [[PlantsVsZombies.exe+329670] + 868] + 5578
 
+紫卡判断是否可用关键 call：0040FDE0
+
 ### 2. Plant
 
 add plant count: 00420C37
@@ -36,6 +38,8 @@ add plant count: 00420C37
 
 * +40：当前血量
 * +44：总血量
+* +48：是否为发射类型
+* +58：技能CD
 * +148：是否种植，0 表示已种植，1 表示未种植。
 * +14A：是否已种植，0表示未种植，非零表示已种植
 
@@ -44,7 +48,11 @@ add plant count: 00420C37
 植物技能函数：0046A110
 
 * 原子菇：eax = F
-* 
+
+植物定时：
+
+* 阳光：00466E03
+* 射手：00466E10
 
 ### 3. Zombie
 
@@ -53,6 +61,8 @@ Add Zombie: 00420B87
 Zombie Walk: 0053B443
 
 Zombie Array Gap: 0x168
+
+Zombie Count decrese / add : 41E9E6
 
 Zombie Structure:
 
@@ -64,11 +74,16 @@ Zombie Structure:
 * +D0: 当前护盾值
 * +D4: 总护盾值
 * +EC: 是否死亡  1 表示死亡
+* +DD: 是否被吹
 
 Zombie blood decrease: 
 
 * 扣减血量: 00541CDA，00541CE4
 * 扣减护盾值：005419FA
+
+Zombie Pos:
+
+* blow: 0053B68D， label bollonzombie: 0046A07D
 
 ### 4. 是否暂停游戏
 

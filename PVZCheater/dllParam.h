@@ -16,3 +16,11 @@ struct AddZombieParam
 	DWORD zombieCode;
 	AddZombieParam(DWORD row, DWORD zombieCode) : row(row), zombieCode(zombieCode) {};
 };
+
+struct GetNextZombieParam
+{
+	DWORD retValue = 0;
+	DWORD startAddress = 0;
+	GetNextZombieParam() {};
+	GetNextZombieParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
+};

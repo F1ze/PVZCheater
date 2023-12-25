@@ -3,6 +3,10 @@
 void logger::init()
 {
 	boost::log::add_file_log(LOG_FILE);
+	boost::log::core::get()->set_filter
+	(
+		boost::log::trivial::severity >= boost::log::trivial::trace
+	);
 }
 
 void logger::getLastError()

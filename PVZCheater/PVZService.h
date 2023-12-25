@@ -20,6 +20,8 @@ private:
 	LPRECT cliRect = nullptr;
 	const std::vector<DWORD> baseOffset = { 0x329670, 0x868 };
 	const std::vector<DWORD> sunOffset = {0x329670, 0x868, 0x5578};
+	const std::vector<DWORD> slotCountOffset = {0x329670, 0x868, 0x15c, 0x24};
+	const std::vector<DWORD> slotOffset = {0x329670, 0x868, 0x15c, 0x5c};
 public:
 	PVZService();
 	~PVZService();
@@ -31,6 +33,12 @@ public:
 
 	int GetSunCount();
 	void SetSunCount(int count);
+
+	int GetSlotCount();
+
+	int GetSlotCodeByIdx(int idx);
+
+	void SetSlotCodeByIdx(int idx, int code);
 	/*
 	Sun Not Decrease
 	*/
@@ -44,7 +52,7 @@ public:
 	/*
 	Plant without CD, chopmer no CD
 	*/
-	void TogglePlantNoCD(bool flag);
+	void ToggleCardNoCD(bool flag);
 
 	/*
 	Plant casually
@@ -66,6 +74,12 @@ public:
 	*/
 	void ToggleSeckillBullet(bool flag);
 
+	void TogglePlantNoCD(bool flag);
+	void TogglePlantNoSleep(bool flag);
+
+	void TogglePlantRandomBullet(bool flag);
+	
+
 	void AddPlant(DWORD row, DWORD col, DWORD code);
 
 	void AddZombie(DWORD row, DWORD code);
@@ -74,6 +88,11 @@ public:
 
 	void FreezeAllZombie();
 	void KillAllZombie();
+	void BlowAllZombie();
+
+	std::vector<DWORD> EnumerateZombie();
+private:
+	DWORD GetNextZombie(DWORD startAddress);
 
 private:
 	BOOL injectDLL();
