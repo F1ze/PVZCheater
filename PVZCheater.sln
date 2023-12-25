@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34316.72
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PVZCheater", "PVZCheater\PVZCheater.vcxproj", "{6D6AF4D4-1ECC-438E-B779-4528A193B613}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pvzdll", "pvzdll\pvzdll.vcxproj", "{16C0E288-6C88-4207-927E-404062E571AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{6D6AF4D4-1ECC-438E-B779-4528A193B613}.Release|x64.Build.0 = Release|x64
 		{6D6AF4D4-1ECC-438E-B779-4528A193B613}.Release|x86.ActiveCfg = Release|Win32
 		{6D6AF4D4-1ECC-438E-B779-4528A193B613}.Release|x86.Build.0 = Release|Win32
+		{16C0E288-6C88-4207-927E-404062E571AE}.Debug|x64.ActiveCfg = Debug|x64
+		{16C0E288-6C88-4207-927E-404062E571AE}.Debug|x64.Build.0 = Debug|x64
+		{16C0E288-6C88-4207-927E-404062E571AE}.Debug|x86.ActiveCfg = Debug|Win32
+		{16C0E288-6C88-4207-927E-404062E571AE}.Debug|x86.Build.0 = Debug|Win32
+		{16C0E288-6C88-4207-927E-404062E571AE}.Release|x64.ActiveCfg = Release|x64
+		{16C0E288-6C88-4207-927E-404062E571AE}.Release|x64.Build.0 = Release|x64
+		{16C0E288-6C88-4207-927E-404062E571AE}.Release|x86.ActiveCfg = Release|Win32
+		{16C0E288-6C88-4207-927E-404062E571AE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
