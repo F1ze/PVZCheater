@@ -24,3 +24,12 @@ struct GetNextZombieParam
 	GetNextZombieParam() {};
 	GetNextZombieParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
 };
+
+
+struct GetNextPlantParam
+{
+	DWORD retValue;
+	DWORD startAddress;
+	GetNextPlantParam() {};
+	GetNextPlantParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
+};

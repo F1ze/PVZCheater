@@ -232,40 +232,86 @@ void GetNextZombie(GetNextZombieParam* param)
 	param->retValue = retV;
 }
 
-// ===============================   Random Bullet Part start ===================================
 
-//signed int __userpurge sub_470DF0@<eax>(int a1<eax>, float* a2, signed int a3, signed int a4, int a5, int a6);
-
-typedef int (WINAPI* sub_470DF0)(int a1, float* a2, int a3, int a4, int a5, int a6);
-
-sub_470DF0 fp_sub_470DF0 = NULL;
-
-
-int WINAPI Detour_sub_470DF0(int a1, float* a2, int a3, int a4, int a5, int a6)
+void GetNextPlant(GetNextPlantParam* param)
 {
-	//LPSTR s = new CHAR[256];
-	//wsprintf(s, "%x = %x = %x = %x", a3, a4, a5, a6);
-	//MessageBox(NULL, s, "", 0);
-	//a5 = 5;
-	return fp_sub_470DF0(a1, a2, a3, a4, a5, a6);
+	DWORD startAddress = param->startAddress;
+
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = (DWORD)hMod + 0x329670;
+
+	DWORD p1 = 0;
+	DWORD* p2 = &param->startAddress;
+	DWORD retV = 0;
+	void* func = (void*)0x41F710;
+	
+	__asm
+	{
+		mov edx, base
+		mov edx, ds: [edx]
+		mov edx, ds: [edx + 0x868]
+		mov esi, p2
+		call func
+		test al, al
+		mov retV, 0
+		je l1
+		mov retV, 1
+		l1:
+	}
+
+	param->retValue = retV;
 }
 
+// ===============================   Random Bullet Part start ===================================
+
+bool Detour32(BYTE* src, BYTE* dst, const uintptr_t len)
+{
+	if (len < 5) return false;
+	DWORD prt;
+	VirtualProtect(src, len, PAGE_EXECUTE_READWRITE, &prt);
+
+	uintptr_t relativeOffset = dst - src - 5;
+	*src = 0xE9;
+	*(uintptr_t*)(src + 1) = relativeOffset;
+
+	VirtualProtect(src, len, prt, &prt);
+	return true;
+}
+
+
+BYTE* TramHook32(BYTE* src, BYTE* dst, const uintptr_t len)
+{
+	if (len < 5) return 0;
+	BYTE* gateway = (BYTE*)VirtualAlloc(nullptr, len, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+	memcpy_s(gateway, len, src, len);
+	uintptr_t relativeOffset = src - gateway - 5;
+
+	*(gateway + len) = 0xE9;
+	*(uintptr_t*)((uintptr_t)gateway + len + 1) = relativeOffset;
+
+	Detour32(src, dst, len);
+	return gateway;
+}
+
+typedef void (*sub_470E29)();
+
+sub_470E29 fn;
 
 // https://stackoverflow.com/questions/4099026/how-to-hook-usercall-userpurge-spoils-functions
 __declspec(naked) void func_hook()
 {
-	__asm {
-		push ebp
-		mov ebp, esp
-		push dword ptr[ebp + 0x14] // a6
-		push dword ptr[ebp + 0x10] // a5
-		push dword ptr[ebp + 0x0C] // a4
-		push dword ptr[ebp + 0x08] // a3
-		push dword ptr[ebp + 0x04] // a2
-		push eax // a1
-		call Detour_sub_470DF0
-		leave
-		ret // note: __usercall is cdecl-like
+	__asm 
+	{
+		pushad
+		call rand
+		cdq
+		mov ecx,13
+		idiv ecx
+		mov eax,edx
+		mov ss: [esp+0x1C], eax
+		popad
+		jmp fn
 	}
 }
 
@@ -279,23 +325,15 @@ void RandomBullet(bool* flag)
 
 	if (*flag)
 	{
-		if (!hasCreate) {
-			if (MH_CreateHook(func, &func_hook, reinterpret_cast<LPVOID*>(&fp_sub_470DF0)) != MH_OK)
-			{
-				MessageBox(NULL, "Create Hook Failed.", "", 0);
-				return;
-			}
-			hasCreate = true;
-		}
-
-		if (MH_EnableHook(func) == MH_ERROR_NOT_CREATED) {
-			hasCreate = false;
-		}
-		MessageBox(NULL, "Hook enable", "", MB_OK);
+		fn = (sub_470E29)0x470E29;
+		fn = (sub_470E29)TramHook32((BYTE*)fn, (BYTE*)func_hook, 5);
 	}
 	else {
-
-		MH_DisableHook(func);
-		MessageBox(NULL, "hook disable", "", MB_OK);
+		void* start = (void*)0x470E29;
+		BYTE ori[] = {0x89, 0x45, 0x5C, 0x8B, 0xC6};
+		DWORD prt;
+		VirtualProtect(start, 5, PAGE_EXECUTE_READWRITE, &prt);
+		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
+		VirtualProtect(start, 5, prt, &prt);
 	}
 }

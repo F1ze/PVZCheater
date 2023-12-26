@@ -38,6 +38,17 @@ struct GetNextZombieParam
 	GetNextZombieParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
 };
 
+// Deprecated
 EXPORT void GetNextZombie(GetNextZombieParam *param);
+
+
+struct GetNextPlantParam
+{
+	DWORD retValue;
+	DWORD startAddress;
+	GetNextPlantParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
+};
+
+EXPORT void GetNextPlant(GetNextPlantParam* param);
 
 EXPORT void RandomBullet(bool* flag);

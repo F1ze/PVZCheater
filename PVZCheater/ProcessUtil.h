@@ -42,6 +42,14 @@ public:
 		return _read;
 	}
 
+	template<typename T>
+	static T* ReadBytes(HANDLE pHandle, QWORD address) {
+		size_t len = sizeof(T);
+		BYTE* _read = new BYTE[len];
+		ReadProcessMemory(pHandle, (LPVOID)address, _read, len, NULL);
+		return (T*)_read;
+	}
+
 
 	/*
 	Read string value from specific address of process handle
@@ -50,7 +58,7 @@ public:
 	2. address: the start address
 	3. len: if len = 65535, then meeting the '\0' will stop; else read specific len of characters.
 	*/
-	static std::string ReadString(HANDLE pHandle, QWORD address, int len = 65535);
+	static std::string ReadString(HANDLE pHandle, QWORD address, size_t len = 65535);
 
 	/*
 	Write value T to address in process handle
@@ -82,12 +90,25 @@ public:
 	static LPVOID AllocAndWrite(HANDLE h, void* data, DWORD size);
 
 	/*
-	Create a new thread which will wait the thread to end and free the memory allocated by `VirtualAllocEx`
+	This will wait the thread to end and free the memory allocated by `VirtualAllocEx`
 	params:
 	1. HANDLE threadHandle, the handle created by `CreateRemoteThread`
 	2. std::vector<LPVOID> addrList, the address list of memories allocated by `VirtualAllocEx`
+	3. async: true to create a new thread to breave resource.
 	*/
-	static void WaitToFree(HANDLE threadHandle, std::vector<LPVOID> addrList);
+	static void WaitToFree(HANDLE threadHandle, std::vector<LPVOID> addrList, bool async = true);
+
+	/*
+	Call the remote dll function and it will be free the allocated memory automatically.
+	params:
+	1. HANDLE h: remote process handle
+	2. HMODULE dllModule: the HMODULE of dll file opened by LoadLibrary.
+	3. const char* funcName: the export function in the dllModule
+	4. addrList: the parameters allocate by `VirtualAllocEx` function, the length MUST be greate than 0, the first item is the function param, the others is used to free in latter progress.
+	5. async: set false if you want to wait the thread exit.
+	return: the boolean result of execution.
+	*/
+	static bool RemoteCallDllFunc(const HANDLE h, const HMODULE dllModule, const char* funcName, std::vector<LPVOID> addrList, bool async = true);
 };
 
 template<typename T>

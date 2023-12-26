@@ -10,6 +10,7 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 #include "MinHook.h"
+#include "cstdlib"
 
 #define EXPORT extern "C" __declspec(dllexport)
 

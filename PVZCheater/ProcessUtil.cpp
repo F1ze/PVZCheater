@@ -39,7 +39,7 @@ std::pair<QWORD, QWORD> ProcessUtil::GetModule(DWORD processId, const char* modu
 	return { 0, 0 };
 }
 
-std::string ProcessUtil::ReadString(HANDLE pHandle, QWORD address, int len)
+std::string ProcessUtil::ReadString(HANDLE pHandle, QWORD address, size_t len)
 {
 	std::string s;
 	for (size_t i = 0; i < len; i++)
@@ -87,15 +87,30 @@ LPVOID ProcessUtil::AllocAndWrite(HANDLE h, void* data, DWORD size)
 	return dataAddr;
 }
 
-void ProcessUtil::WaitToFree(HANDLE threadHandle, std::vector<LPVOID> addrList)
+void ProcessUtil::WaitToFree(HANDLE threadHandle, std::vector<LPVOID> addrList, bool async)
 {
-	std::thread t([threadHandle, addrList] {
+	auto func = [threadHandle, addrList] {
 		WaitForSingleObject(threadHandle, INFINITE);
 		// https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualfreeex
 		for (auto item : addrList)
 			VirtualFreeEx(threadHandle, item, 0, MEM_RELEASE);
-		//MessageBox(NULL, "Release", nullptr, 0);
-	});
+		CloseHandle(threadHandle);
+	};
+	
+	if (async) {
+		std::thread t(func);
+		t.detach();
+	}
+	else func();
+}
 
-	t.detach();
+bool ProcessUtil::RemoteCallDllFunc(const HANDLE h, const HMODULE dllModule, const char* funcName, std::vector<LPVOID> addrList, bool async)
+{
+	if (h == nullptr || dllModule == nullptr || addrList.empty()) return false;
+	auto funcAddr = (LPTHREAD_START_ROUTINE)GetProcAddress(dllModule, funcName);
+	if (!funcAddr) return false;
+	HANDLE threadHandle = CreateRemoteThread(h, nullptr, 0, funcAddr, addrList[0], 0, NULL);
+	if (!threadHandle) return false;
+	WaitToFree(threadHandle, addrList, async);
+	return true;
 }

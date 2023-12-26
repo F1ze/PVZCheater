@@ -3,6 +3,7 @@
 #include "ProcessUtil.h"
 #include "logger.h"
 #include "dllParam.h"
+#include "GameObjects.h"
 
 class PVZService
 {
@@ -16,6 +17,7 @@ private:
 
 	DWORD pid = 0;
 	HANDLE pHandle = nullptr;
+	HMODULE myDLLHModule = nullptr;
 	LPRECT wndRect = nullptr;
 	LPRECT cliRect = nullptr;
 	const std::vector<DWORD> baseOffset = { 0x329670, 0x868 };
@@ -89,10 +91,18 @@ public:
 	void FreezeAllZombie();
 	void KillAllZombie();
 	void BlowAllZombie();
+	// option: 1 -> All, 2-> The frontest in lane, 3 -> random
+	void CharmZombies(int option);
+	// flag: 1 -> all 0 -> random 
+	void EatOnionZombie(bool flag);
 
-	std::vector<DWORD> EnumerateZombie();
+
+	std::vector<Zombie*> EnumerateZombie();
+	std::vector<Plant*> EnumeratePlants();
+	std::vector<Bullet*> EnumerateBullet();
 private:
 	DWORD GetNextZombie(DWORD startAddress);
+	DWORD GetNextPlant(DWORD startAddress);
 
 private:
 	BOOL injectDLL();

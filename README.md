@@ -35,13 +35,11 @@ add plant count: 00420C37
 * +8：XPos
 * +C：YPos
 * +24：植物代码
-
 * +40：当前血量
 * +44：总血量
 * +48：是否为发射类型
 * +58：技能CD
-* +148：是否种植，0 表示已种植，1 表示未种植。
-* +14A：是否已种植，0表示未种植，非零表示已种植
+* +90：发射类植物的发射CD
 
 冰冻菇：1045F0C6
 
@@ -66,15 +64,15 @@ Zombie Count decrese / add : 41E9E6
 
 Zombie Structure:
 
-* +2C: XPos(int)	+50 (float)
-* +28: YPos(int)     +54(float)
-* +58：减速速度，为负数可以击退僵尸
+* +8: XPos(int)	+2C (float)
+* +C: YPos(int)   +30(float)
+* +34：减速速度，为负数可以击退僵尸
+* +B8:是否魅惑
+* +b9: 是否被吹
 * +C8: 当前血量
 * +CC：总血量
 * +D0: 当前护盾值
 * +D4: 总护盾值
-* +EC: 是否死亡  1 表示死亡
-* +DD: 是否被吹
 
 Zombie blood decrease: 
 
