@@ -16,12 +16,12 @@ DWORD ProcessUtil::GetProcessIDByExeFile(const char* processName)
 	HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	PROCESSENTRY32 entry;
 	entry.dwSize = sizeof(entry);
-	do {
+	while (Process32Next(handle, &entry)) {
 		if (!strcmp(entry.szExeFile, processName)) {
-			//CloseHandle(handle);
+			CloseHandle(handle);
 			return entry.th32ProcessID;
 		}
-	} while (Process32Next(handle, &entry));
+	}
 	return 0;
 }
 

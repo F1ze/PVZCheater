@@ -89,13 +89,18 @@ public:
 	bool isInBattle();
 
 	void FreezeAllZombie();
-	void KillAllZombie();
+	void KillAllZombie(int type = 0);
 	void BlowAllZombie();
 	// option: 1 -> All, 2-> The frontest in lane, 3 -> random
 	void CharmZombies(int option);
 	// flag: 1 -> all 0 -> random 
 	void EatOnionZombie(bool flag);
 
+	void killPlant(Plant* addr);
+	void killZombie(Zombie* addr);
+	void killBullet(Bullet* addr);
+	template<typename T>
+	void SetZombieAttr(Zombie *z, void* attr, T value);
 
 	std::vector<Zombie*> EnumerateZombie();
 	std::vector<Plant*> EnumeratePlants();
@@ -108,3 +113,10 @@ private:
 	BOOL injectDLL();
 };
 
+// TODO: test it.
+template<typename T>
+inline void PVZService::SetZombieAttr(Zombie* z, void* attr, T value)
+{
+	//assert false;
+	//ProcessUtil::Write<T>(this->pHandle, GetMemAddr(z, (BYTE*)attr, value));
+}

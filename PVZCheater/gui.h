@@ -29,3 +29,5 @@ namespace gui {
 }
 
 void mainGui();
+
+void watchWindow(bool isInitial);

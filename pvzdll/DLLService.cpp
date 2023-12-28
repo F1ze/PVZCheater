@@ -83,19 +83,6 @@ EXPORT void AddPlant(AddPlantParam* param)
 
 void AddZombie(AddZombieParam* param)
 {
-	//alloc(cz, 50)
-	//createThread(cz)
-	//define(base, PlantsVsZombies.exe + 329670)
-	//cz:
-	//mov eax, 1
-	//push eax
-	//mov esi, 13
-	//push esi
-	//mov edi, [base]
-	//mov edi, [edi + 868]
-	//mov eax, edi
-	//call 410700
-	//retn
 	DWORD row = param->row;
 	DWORD code = param->zombieCode;
 	if (row > 4 || code > 36) return;
@@ -117,6 +104,40 @@ void AddZombie(AddZombieParam* param)
 		mov eax, edi
 		call func
 	}
+}
+
+std::vector<DWORD> getAllZombie()
+{
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = (DWORD)hMod + 0x329670;
+
+	DWORD zbArr = 0;
+	DWORD len = 0;
+
+	__asm {
+		pushad
+		mov eax, base
+		mov eax, ds: [eax]
+		mov eax, ds: [eax + 0x868]
+		mov ebx, ds: [eax + 0xA8]
+		mov zbArr, ebx
+		mov eax, ds: [eax + 0xAC]
+		mov len, eax
+		popad
+	}
+
+	std::vector<DWORD> arr;
+	const int zbSz = 0x168;
+	DWORD arrEnd = zbArr + len * zbSz;
+
+	for (DWORD i = zbArr; i < arrEnd; i+= zbSz)
+	{
+		BYTE sign = *(BYTE*)(i + 0xEC);
+		if (!sign) arr.push_back(i);
+	}
+
+	return arr;
+
 }
 
 void FreezeAllZombie()
@@ -152,7 +173,7 @@ void FreezeAllZombie()
 	}
 }
 
-void KillAllZombie()
+void KillAllZombie(int *type)
 {
 
 	HANDLE h = GetCurrentProcess();
@@ -160,34 +181,31 @@ void KillAllZombie()
 	HMODULE hMod = GetModuleHandle(NULL);
 	DWORD base = (DWORD)hMod + 0x329670;
 
-	void* func = (void*)0x420670;
-	
-	DWORD a = 0x7D809090;
+	auto zbArr = getAllZombie();
+	if (type == nullptr || *type == 0)
+	{
+		void* func = (void*)0x543540;
 
-	WriteProcessMemory(h, (LPVOID)0x4206F3, &a, sizeof(DWORD), NULL);
-
-	__asm {
-		mov ecx, 0x7f
-		mov edi, 0xdc
-		mov esi, 0x50
-		mov edx, 0x3
-		mov eax, base
-		mov eax, ds: [eax]
-		mov eax, ds: [eax + 0x868]
-
-
-		push ecx
-		push 0x1
-		push 0x3
-		push 0xFA
-		push edi
-		push esi
-		push edx
-		push eax
-		call func
+		for (auto item : zbArr) {
+			__asm {
+				pushad
+				mov ecx, item
+				call func
+				popad
+			}
+		}
 	}
-	a = 0x7D803D74;
-	WriteProcessMemory(h, (LPVOID)0x4206F3, &a, sizeof(DWORD), NULL);
+	else if (*type == 1)
+	{
+		for (auto item : zbArr) {
+			*(DWORD*)(item + 0x28) = 3;
+		}
+	}
+	else {
+		for (auto item : zbArr) {
+			*(BYTE*)(item + 0xEC) = 1;
+		}
+	}
 }
 
 void GetNextZombie(GetNextZombieParam* param)

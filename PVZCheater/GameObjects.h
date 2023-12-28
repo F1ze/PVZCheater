@@ -1,30 +1,65 @@
 #pragma once
 #include "pch.h"
 
+#define GetInt(base, offset) (*(int*)((BYTE*)base + offset))
+#define GetFloat(base, offset) (*(float*)((BYTE*)base + offset))
+#define GetByte(base, offset) (*(BYTE*)((BYTE*)base + offset))
+// Get offset in a obj
+#define GetOffset(obj, attr) ((uintptr_t)((BYTE*)(&attr) - (BYTE*)(obj)))
+#define GetMemAddr(pObj, attr) ((uintptr_t)((pObj->addr)+GetOffset(pObj, attr)))
+
 typedef BYTE(ZombieType)[0x168];
 
 struct Zombie {
-	DWORD addr;
+private:
+	BYTE _r1[8];
+public:
 	// +8
 	int xPosI;
 	// +C
 	int yPosI;
+private:
+	BYTE _r2[0xC];
+public:
+	// +1C
+	int row;
+private:
+	BYTE _r3[0x4];
+public:
 	// +0x24
 	int code;
+	// +0x28 1->fade away, 2->be black 3->head execution
+	int behaviorType;
 	// +0x2C
 	float xPosF;
 	// +0x30
 	float yPosF;
 	// +0x34
 	float slowDownSpeed;
+private:
+	BYTE _r4[0x80];
+public:
 	// +0xB8
 	BYTE isCharm;
 	// +0xB9
 	BYTE isBlowToDie;
+	// +0xBA
+	BYTE isIgnorePlant;
+private:
+	BYTE _r5;
+	BYTE _r6;
+public:
 	// +0xBD
 	BYTE isJumpWater;
+private:
+	// 0xBE
+	BYTE _r7;
+public:
 	// +0xBF
 	BYTE isEatOnion;
+private:
+	BYTE _r8[8];
+public:
 	// +0xC8
 	int curBlood;
 	// +0xCC
@@ -33,22 +68,16 @@ struct Zombie {
 	int curShield;
 	// +0xD4
 	int fullShield;
-
-	const DWORD xPosIOffset = 0x8;
-	const DWORD yPosIOffset = 0xC;
-	const DWORD codeOffset = 0x24;
-	const DWORD xPosFOffset = 0x2C;
-	const DWORD yPosFOffset = 0x30;
-	const DWORD slowDownSpeedOffset = 0x34;
-	const DWORD isCharmOffset = 0xB8;
-	const DWORD isBlowToDieOffset = 0xB9;
-	const DWORD isJumpWaterOffset = 0xBD;
-	const DWORD isEatOnionOffset = 0xBF;
-	const DWORD curBloodOffset = 0xC8;
-	const DWORD fullBloodOffset = 0xCC;
-	const DWORD curShieldOffset = 0xD0;
-	const DWORD fullShieldOffset = 0xD4;
-
+private:
+	BYTE _r9[0x14];
+public:
+	// +0xEC
+	BYTE isDead;
+private:
+	BYTE _r10[0x7B];
+public:
+	DWORD addr;
+public:
 	Zombie(DWORD addr) : addr(addr) {};
 };
 
@@ -56,32 +85,43 @@ struct Zombie {
 typedef BYTE(PlantType)[0x14C];
 
 struct Plant {
-	DWORD addr;
+private:
+	BYTE _r1[0x8];
+public:
 	// +8
 	int xPos;
 	// +C
 	int yPos;
+private:
+	BYTE _r2[0x14];
+public:
 	// +24
 	int code;
+private:
+	BYTE _r3[0x18];
+public:
 	// +40
 	int curBlood;
 	// +44
 	int fullBlood;
 	// +48
 	int isAttackType;
+private:
+	BYTE _r4[0xC];
+public:
 	// +58
 	int curCD;
 	// +5C
 	int fullCD;
-
-	const DWORD xPosOffset = 0x8;
-	const DWORD yPosOffset = 0xC;
-	const DWORD codeOffset = 0x24;
-	const DWORD curBloodOffset = 0x40;
-	const DWORD fullBloodOffset = 0x44;
-	const DWORD isAttackTypeOffset = 0x48;
-	const DWORD curCDOffset = 0x58;
-	const DWORD fullCDOffset = 0x5C;
+private:
+	BYTE _r5[0xE1];
+public:
+	// 0x141
+	BYTE isDead;
+private:
+	BYTE _r6[0xA];
+public:
+	DWORD addr;
 
 	Plant(DWORD addr) : addr(addr) {};
 };
@@ -111,7 +151,7 @@ private:
 	BYTE _r4[24];
 public:
 	// 0x50
-	BYTE isValid;
+	BYTE isDead;
 private:
 	BYTE _r5[8+3];
 public:

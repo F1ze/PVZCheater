@@ -11,6 +11,9 @@
 #include "framework.h"
 #include "MinHook.h"
 #include "cstdlib"
+#include "vector"
+#include "unordered_map"
+#include "map"
 
 #define EXPORT extern "C" __declspec(dllexport)
 

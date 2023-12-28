@@ -67,16 +67,21 @@ LPRECT PVZService::GetWndRect()
 
 int PVZService::GetSunCount()
 {
-	auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
-	auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, sunOffset);
-	return ProcessUtil::Read<int>(this->pHandle, addr);
+	if (isInBattle()) {
+		auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
+		auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, sunOffset);
+		return ProcessUtil::Read<int>(this->pHandle, addr);
+	}
+	return 0;
 }
 
 void PVZService::SetSunCount(int count)
 {
-	auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
-	auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, sunOffset);
-	ProcessUtil::Write(this->pHandle, addr, count);
+	if (isInBattle()) {
+		auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
+		auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, sunOffset);
+		ProcessUtil::Write(this->pHandle, addr, count);
+	}
 }
 
 int PVZService::GetSlotCount()
@@ -91,18 +96,23 @@ int PVZService::GetSlotCount()
 
 int PVZService::GetSlotCodeByIdx(int idx)
 {
-	auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
-	auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, slotOffset);
-	addr += idx * 0x50;
-	return ProcessUtil::Read<DWORD>(this->pHandle, addr);
+	if (isInBattle()) {
+		auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
+		auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, slotOffset);
+		addr += idx * 0x50;
+		return ProcessUtil::Read<DWORD>(this->pHandle, addr);
+	}
+	return 0;
 }
 
 void PVZService::SetSlotCodeByIdx(int idx, int code)
 {
-	auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
-	auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, slotOffset);
-	addr += idx * 0x50;
-	ProcessUtil::Write<DWORD>(this->pHandle, addr, code);
+	if (isInBattle()) {
+		auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
+		auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, slotOffset);
+		addr += idx * 0x50;
+		ProcessUtil::Write<DWORD>(this->pHandle, addr, code);
+	}
 }
 
 void PVZService::ToggleSunNotDecrease(bool flag)
@@ -285,7 +295,7 @@ void PVZService::TogglePlantRandomBullet(bool flag)
 
 void PVZService::AddPlant(DWORD row, DWORD col, DWORD code)
 {
-	if (this->IsGameRunning() && this->isInjectedDLL && isInBattle()) {
+	if (this->isInjectedDLL && isInBattle()) {
 		AddPlantParam* param = new AddPlantParam(row, col, code);
 		auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, param, sizeof(AddPlantParam));
 		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "AddPlant", { paddr });
@@ -294,7 +304,7 @@ void PVZService::AddPlant(DWORD row, DWORD col, DWORD code)
 
 void PVZService::AddZombie(DWORD row, DWORD code)
 {
-	if (this->IsGameRunning() && this->isInjectedDLL && isInBattle() && row < 5) {
+	if (this->isInjectedDLL && isInBattle() && row < 5) {
 		AddZombieParam* param = new AddZombieParam(row, code);
 		auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, param, sizeof(AddZombieParam));
 		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "AddZombie", { paddr });
@@ -314,15 +324,16 @@ bool PVZService::isInBattle()
 
 void PVZService::FreezeAllZombie()
 {
-	if (this->IsGameRunning() && this->isInjectedDLL && isInBattle()) {
+	if (this->isInjectedDLL && isInBattle()) {
 		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "FreezeAllZombie", { nullptr });
 	}
 }
 
-void PVZService::KillAllZombie()
+void PVZService::KillAllZombie(int type)
 {
 	if (this->IsGameRunning() && this->isInjectedDLL && isInBattle()) {
-		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "KillAllZombie", { nullptr });
+		auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &type, sizeof(int));
+		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "KillAllZombie", { paddr });
 	}
 }
 
@@ -330,7 +341,7 @@ void PVZService::BlowAllZombie()
 {
 	auto arr = this->EnumerateZombie();
 	for (auto item : arr) {
-		ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isBlowToDieOffset, 1);
+		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isBlowToDie), 1);
 	}
 }
 
@@ -345,7 +356,7 @@ void PVZService::CharmZombies(int option)
 	{
 		auto isCharm = item->isCharm;
 		if (isCharm) continue;
-		if (option == 1) ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isCharmOffset, 1);
+		if (option == 1) ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isCharm), 1);
 		else if (option == 2) {
 			DWORD xpos = item->xPosI;
 			DWORD ypos = item->yPosI;
@@ -355,7 +366,7 @@ void PVZService::CharmZombies(int option)
 			}
 		}
 		else if (option == 3) {
-			if (rand() % 3 == 1) ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isCharmOffset, 1);
+			if (rand() % 3 == 1) ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isCharm), 1);
 		}
 	}
 
@@ -363,7 +374,7 @@ void PVZService::CharmZombies(int option)
 	{
 		for (auto &&p : frontestZombie) {
 			auto item = p.second.second;
-			ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isCharmOffset, 1);
+			ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isCharm), 1);
 		}
 	}
 }
@@ -378,10 +389,31 @@ void PVZService::EatOnionZombie(bool flag)
 	{
 		auto isOnion = item->isEatOnion;
 		if (isOnion) continue;
-		if (flag) ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isEatOnionOffset, 1);
+		if (flag) ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isEatOnion), 1);
 		else {
-			if (rand() % 2) ProcessUtil::Write<BYTE>(this->pHandle, item->addr + item->isEatOnionOffset, 1);
+			if (rand() % 2) ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(item, item->isEatOnion), 1);
 		}
+	}
+}
+
+void PVZService::killPlant(Plant* plt)
+{
+	if (isInBattle()) {
+		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(plt, plt->isDead), 1);
+	}
+}
+
+void PVZService::killZombie(Zombie* zb)
+{
+	if (isInBattle()) {
+		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(zb, zb->isDead), 1);
+	}
+}
+
+void PVZService::killBullet(Bullet* b)
+{
+	if (isInBattle()) {
+		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(b, b->isDead), 1);
 	}
 }
 
@@ -390,15 +422,6 @@ std::vector<Zombie*> PVZService::EnumerateZombie()
 	//DWORD startAddress = 0;
 	std::vector<Zombie*> arr;
 	if (isInBattle()) {
-		//while (true) {
-		//	startAddress = GetNextZombie(startAddress);
-		//	if (startAddress == 0) break;
-		//	auto raw = ProcessUtil::ReadBytes<ZombieType>(this->pHandle, startAddress);
-		//	auto zb = parseZombie(startAddress, raw);
-		//	delete []raw;
-		//	arr.push_back(zb);
-		//	BOOST_LOG_TRIVIAL(info) << "Zombie: " << startAddress;
-		//}
 
 		/*判断是僵尸的条件：
 			1.[zbAddr + 0x164] & 0xFFFF0000 != 0
@@ -410,7 +433,7 @@ std::vector<Zombie*> PVZService::EnumerateZombie()
 		auto zombieCountPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0xAC });
 		auto zombieArr = ProcessUtil::Read<DWORD>(this->pHandle, zombieArrPtr);
 		auto zombieArrLen = ProcessUtil::Read<DWORD>(this->pHandle, zombieCountPtr);
-		for (DWORD i = 0; i < zombieArrLen; i++, zombieArr+= 0x168)
+		for (DWORD i = 0; i < zombieArrLen; i++, zombieArr+= sizeof(ZombieType))
 		{
 			BYTE sign0xEC = ProcessUtil::Read<BYTE>(this->pHandle, zombieArr + 0xEC);
 			DWORD sign0x164 = ProcessUtil::Read<DWORD>(this->pHandle, zombieArr + 0x164);
@@ -433,22 +456,13 @@ std::vector<Plant*> PVZService::EnumeratePlants()
 	DWORD startAddress = 0;
 	std::vector<Plant*> arr;
 	if (isInBattle()) {
-		//while (true) {
-		//	startAddress = GetNextPlant(startAddress);
-		//	if (startAddress == 0) break;
-		//	auto raw = ProcessUtil::ReadBytes<PlantType>(this->pHandle, startAddress);
-		//	auto plant = parsePlant(startAddress, raw);
-		//	delete []raw;
-		//	arr.push_back(plant);
-		//	BOOST_LOG_TRIVIAL(info) << "Plant: " << startAddress;
-		//}
 		auto base868ptr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, (DWORD)0x400000, baseOffset);
 
 		auto plantArrPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0xC4 });
 		auto plantCountPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0xC8 });
 		auto plantArr = ProcessUtil::Read<DWORD>(this->pHandle, plantArrPtr);
 		auto plantArrLen = ProcessUtil::Read<DWORD>(this->pHandle, plantCountPtr);
-		for (DWORD i = 0; i < plantArrLen; i++, plantArr += 0x14C)
+		for (DWORD i = 0; i < plantArrLen; i++, plantArr += sizeof(PlantType))
 		{
 			BYTE sign0x141 = ProcessUtil::Read<BYTE>(this->pHandle, plantArr + 0x141);
 			DWORD sign0x148 = ProcessUtil::Read<DWORD>(this->pHandle, plantArr + 0x148);
@@ -478,7 +492,7 @@ std::vector<Bullet*> PVZService::EnumerateBullet()
 		auto bulletCountPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0xE4 });
 		auto bulletArr = ProcessUtil::Read<DWORD>(this->pHandle, bulletArrPtr);
 		auto bulletArrLen = ProcessUtil::Read<DWORD>(this->pHandle, bulletCountPtr);
-		for (DWORD i = 0; i < bulletArrLen; i++, bulletArr += 0x94)
+		for (DWORD i = 0; i < bulletArrLen; i++, bulletArr += sizeof(BulletType))
 		{
 			BYTE sign0x50 = ProcessUtil::Read<BYTE>(this->pHandle, bulletArr + 0x50);
 			DWORD sign0x90 = ProcessUtil::Read<DWORD>(this->pHandle, bulletArr + 0x90);

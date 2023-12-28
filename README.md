@@ -87,6 +87,12 @@ Zombie Pos:
 
 0061607F
 
-## 0x2. Reference
+## 0x2 函数
+
+### 1. 遍历僵尸
+
+函数：41F6B0，找到下一个僵尸
+
+## 0x??. Reference
 
 * https://plantsvszombies.fandom.com/wiki/Hacking_guide#Method_1

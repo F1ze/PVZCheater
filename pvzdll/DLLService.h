@@ -28,7 +28,7 @@ EXPORT void AddZombie(AddZombieParam* param);
 
 
 EXPORT void FreezeAllZombie();
-EXPORT void KillAllZombie();
+EXPORT void KillAllZombie(int *type);
 
 
 struct GetNextZombieParam
