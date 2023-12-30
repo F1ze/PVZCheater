@@ -80,6 +80,10 @@ public:
 	void TogglePlantNoSleep(bool flag);
 
 	void TogglePlantRandomBullet(bool flag);
+
+	void ToggleBombFullScreen(bool flag);
+
+
 	
 
 	void AddPlant(DWORD row, DWORD col, DWORD code);

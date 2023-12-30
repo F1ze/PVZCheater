@@ -148,6 +148,7 @@ public:
 	// 0x34
 	float yPosF;
 private:
+	// all float
 	BYTE _r4[24];
 public:
 	// 0x50
@@ -155,12 +156,44 @@ public:
 private:
 	BYTE _r5[8+3];
 public:
+	// 0x5C
 	int code;
 private:
 	BYTE _r6[4*13];
 public:
 	DWORD addr;
 	Bullet(DWORD addr) : addr(addr) {};
+};
+
+enum BulletCode {
+	// 0
+	BEAN,
+	// 1
+	ICE_BEAN,
+	// 2
+	CABBAGE,
+	// 3
+	WATERMALON,
+	// 4
+	BUBBLE,
+	// 5
+	ICE_WATERMALON,
+	// 6
+	FIRE_BEAN,
+	// 7
+	STAR,
+	// 8
+	THORN,
+	// 9
+	BASKETBALL,
+	// 0xA
+	CORN_GRAIN,
+	// 0xB
+	CORN_BOMB,
+	// 0xC, 12
+	BUTTER,
+	// 0xD, 13
+	BEAN_1
 };
 
 // 将得到的数组转化为结构体

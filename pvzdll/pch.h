@@ -14,6 +14,7 @@
 #include "vector"
 #include "unordered_map"
 #include "map"
+#include "atomic"
 
 #define EXPORT extern "C" __declspec(dllexport)
 

@@ -6,11 +6,13 @@
 
 ## 0x1. Cheat Notes
 
-| Name | Offset |      |
-| ---- | ------ | ---- |
-|      |        |      |
-|      |        |      |
-|      |        |      |
+base868 = [ [PlantsVsZombies.exe+329670] + 868]
+
+| Name     | Offset(base868+??) |                                                             |
+| -------- | ------------------ | ----------------------------------------------------------- |
+| Scene    | 0x5564             | 0->fore_day 1->fore_night 2->backyard-day 3->backyard-night |
+|          | 0x5568             |                                                             |
+| SunCount | 0x5578             | The count of sun                                            |
 
 ### 1. Sun
 
@@ -86,6 +88,12 @@ Zombie Pos:
 ### 4. 是否暂停游戏
 
 0061607F
+
+### 5. Bullet
+
+Change Bullet Position: 471F70
+
+Spawn Bullet: 00470E38
 
 ## 0x2 函数
 

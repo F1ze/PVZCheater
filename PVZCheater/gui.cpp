@@ -266,6 +266,7 @@ void mainGui()
 			static bool seckillBullet = false;
 			static bool plantNoSleep = false;
 			static bool randomBullet = false;
+			static bool bombFullScreen = false;
 
 			static int slotCount = 0;
 
@@ -284,6 +285,7 @@ void mainGui()
 				seckillBullet = false;
 				plantNoSleep = false;
 				randomBullet = false;
+				bombFullScreen = false;
 
 				slotCount = 0;
 				curSlot = 0;
@@ -351,6 +353,8 @@ void mainGui()
 				if (ImGui::Checkbox("Plant no sleep", &plantNoSleep)) pvzServ->TogglePlantNoSleep(plantNoSleep);
 				ImGui::TableSetColumnIndex(1);
 				if (ImGui::Checkbox("Random bullet", &randomBullet)) pvzServ->TogglePlantRandomBullet(randomBullet);
+				ImGui::TableSetColumnIndex(2);
+				if (ImGui::Checkbox("Bomb Full Screen", &bombFullScreen)) pvzServ->ToggleBombFullScreen(bombFullScreen);
 				ImGui::EndTable();
 			}
 
