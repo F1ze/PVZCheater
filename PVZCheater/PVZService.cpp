@@ -299,6 +299,36 @@ void PVZService::ToggleBombFullScreen(bool flag)
 	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "BombFullScreen", { paddr });
 }
 
+void PVZService::ToggleBulletOverlay(bool flag)
+{
+	if (flag) {
+		// gatling
+		ProcessUtil::Write<WORD>(this->pHandle, 0x46848B, 0x13EB);
+		// gloom-shroom
+		ProcessUtil::Write<WORD>(this->pHandle, 0x468363, 0x0FEB);
+		// normal
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x4684E4, 0xF883909090909090);
+		// cattail
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x4684B7, 0x578B909090909090);
+	}
+	else 
+	{
+		// gatling
+		ProcessUtil::Write<WORD>(this->pHandle, 0x46848B, 0x1374);
+		// gloom-shroom
+		ProcessUtil::Write<WORD>(this->pHandle, 0x468363, 0x0F74);
+		// normal
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x4684E4, 0xF883FFFFFE98850F);
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x4684B7, 0x578BFFFFFEC5850F);
+	}
+}
+
+void PVZService::ToggleBulletAutoTrack(bool flag)
+{
+	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &flag, sizeof(bool));
+	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "BulletAutoTrack", { paddr });
+}
+
 void PVZService::AddPlant(DWORD row, DWORD col, DWORD code)
 {
 	if (this->isInjectedDLL && isInBattle()) {

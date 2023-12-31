@@ -267,6 +267,8 @@ void mainGui()
 			static bool plantNoSleep = false;
 			static bool randomBullet = false;
 			static bool bombFullScreen = false;
+			static bool bulletOverlay = false;
+			static bool bulletAutoTrack = false;
 
 			static int slotCount = 0;
 
@@ -286,6 +288,7 @@ void mainGui()
 				plantNoSleep = false;
 				randomBullet = false;
 				bombFullScreen = false;
+				bulletOverlay = false;
 
 				slotCount = 0;
 				curSlot = 0;
@@ -355,6 +358,11 @@ void mainGui()
 				if (ImGui::Checkbox("Random bullet", &randomBullet)) pvzServ->TogglePlantRandomBullet(randomBullet);
 				ImGui::TableSetColumnIndex(2);
 				if (ImGui::Checkbox("Bomb Full Screen", &bombFullScreen)) pvzServ->ToggleBombFullScreen(bombFullScreen);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				if (ImGui::Checkbox("Bullet Overlay", &bulletOverlay)) pvzServ->ToggleBulletOverlay(bulletOverlay);
+				ImGui::TableSetColumnIndex(1);
+				if (ImGui::Checkbox("Bullet AutoTrack", &bulletAutoTrack)) pvzServ->ToggleBulletAutoTrack(bulletAutoTrack);
 				ImGui::EndTable();
 			}
 

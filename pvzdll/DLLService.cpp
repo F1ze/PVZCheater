@@ -392,3 +392,58 @@ void BombFullScreen(bool* flag)
 		if (hasEnableHook && MH_DisableHook(func) == MH_OK) hasEnableHook = false;
 	}
 }
+
+
+// ================== Bullet Auto Track hook ======================
+
+typedef int (__stdcall *BulletMoveFn)(int bulletAddr);
+BulletMoveFn oriBulletMoveFn;
+
+int __stdcall detourBulletMoveFn(int bulletAddr) {
+
+	int bulletMoveType = *(int*)(bulletAddr + 0x58);
+	if (bulletMoveType == 0) {
+		// bullet move type
+		*(int*)(bulletAddr + 0x58) = 9;
+		auto arr = getAllZombie();
+		int sz = arr.size();
+		if (sz > 0) {
+			int idx = rand() % (int)arr.size();
+			int zb = arr[idx];
+			*(int*)(bulletAddr + 0x88) = *(int*)(zb + 0x164);
+		}
+	}
+	
+	return oriBulletMoveFn(bulletAddr);
+}
+
+void BulletAutoTrack(bool* flag)
+{
+	static std::atomic<bool> isCreateHook = false;
+	static bool hasEnableHook = false;
+
+	bool expect = false;
+
+	LPVOID func = (LPVOID)0x471F70;
+
+	if (isCreateHook.compare_exchange_strong(expect, true)) {
+		MH_CreateHook(func, &detourBulletMoveFn, reinterpret_cast<LPVOID*>(&oriBulletMoveFn));
+	}
+
+	if (*flag) {
+		if (hasEnableHook == false && MH_EnableHook(func) == MH_OK) hasEnableHook = true;
+		DWORD old;
+		VirtualProtect((LPVOID)0x46B143, 2, PAGE_EXECUTE_READWRITE, &old);
+		*(WORD*)(0x46B143) = 0x43EB;
+		VirtualProtect((LPVOID)0x46B143, 2, old, &old);
+	}
+	else
+	{
+		//MH_DisableHook(func);
+		if (hasEnableHook && MH_DisableHook(func) == MH_OK) hasEnableHook = false;
+		DWORD old;
+		VirtualProtect((LPVOID)0x46B143, 2, PAGE_EXECUTE_READWRITE, &old);
+		*(WORD*)(0x46B143) = 0x4374;
+		VirtualProtect((LPVOID)0x46B143, 2, old, &old);
+	}
+}

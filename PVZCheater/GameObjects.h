@@ -37,6 +37,7 @@ public:
 	// +0x34
 	float slowDownSpeed;
 private:
+	// +0x64 = 10, 会改变僵尸的行动轨迹
 	BYTE _r4[0x80];
 public:
 	// +0xB8
@@ -93,12 +94,19 @@ public:
 	// +C
 	int yPos;
 private:
-	BYTE _r2[0x14];
+	BYTE _r2_0[0xC];
+public:
+	// 0x1C
+	int row;
+private:
+	BYTE _r2_1[0x4];
 public:
 	// +24
 	int code;
+	// +28
+	int col;
 private:
-	BYTE _r3[0x18];
+	BYTE _r3[0x14];
 public:
 	// +40
 	int curBlood;
@@ -114,7 +122,15 @@ public:
 	// +5C
 	int fullCD;
 private:
-	BYTE _r5[0xE1];
+	BYTE _r5_1[0x28];
+	// 0x88
+	int row_2;
+	BYTE _r5_1_1[0x4];
+public:
+	// 0x90
+	int emitCD;
+private:
+	BYTE _r5_2[0xAD];
 public:
 	// 0x141
 	BYTE isDead;

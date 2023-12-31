@@ -83,7 +83,9 @@ public:
 
 	void ToggleBombFullScreen(bool flag);
 
+	void ToggleBulletOverlay(bool flag);
 
+	void ToggleBulletAutoTrack(bool flag);
 	
 
 	void AddPlant(DWORD row, DWORD col, DWORD code);

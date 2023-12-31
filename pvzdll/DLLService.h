@@ -54,3 +54,5 @@ EXPORT void GetNextPlant(GetNextPlantParam* param);
 EXPORT void RandomBullet(bool* flag);
 
 EXPORT void BombFullScreen(bool* flag);
+
+EXPORT void BulletAutoTrack(bool* flag);
