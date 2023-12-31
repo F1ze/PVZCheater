@@ -402,16 +402,32 @@ BulletMoveFn oriBulletMoveFn;
 int __stdcall detourBulletMoveFn(int bulletAddr) {
 
 	int bulletMoveType = *(int*)(bulletAddr + 0x58);
-	if (bulletMoveType == 0) {
-		// bullet move type
-		*(int*)(bulletAddr + 0x58) = 9;
+	float &xSpeed = *(float*)(bulletAddr + 0x3C);
+	if (bulletMoveType == 0 || bulletMoveType == 2 || bulletMoveType == 6) {
 		auto arr = getAllZombie();
 		int sz = arr.size();
 		if (sz > 0) {
+			// bullet move type
+			*(int*)(bulletAddr + 0x58) = 9;
 			int idx = rand() % (int)arr.size();
+			// prior to attack zombies which xpos < 200.
+			std::sort(arr.begin(), arr.end(), [](DWORD a, DWORD b) {
+				int ax = *(int*)(a + 0x8);
+				int bx = *(int*)(b + 0x8);
+				return ax < bx;
+			});
+			if (*(int*)(arr[0] + 0x8) <= 200) idx = 0;
 			int zb = arr[idx];
 			*(int*)(bulletAddr + 0x88) = *(int*)(zb + 0x164);
 		}
+	}
+	else if (bulletMoveType == 9) {
+		if (xSpeed == 0) {
+			*(int*)(bulletAddr + 0x58) = 0;
+			*(int*)(bulletAddr + 0x88) = 0;
+			xSpeed = 3;
+		}
+		
 	}
 	
 	return oriBulletMoveFn(bulletAddr);

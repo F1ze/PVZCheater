@@ -15,6 +15,8 @@
 #include "unordered_map"
 #include "map"
 #include "atomic"
+#include "iostream"
+#include "algorithm"
 
 #define EXPORT extern "C" __declspec(dllexport)
 

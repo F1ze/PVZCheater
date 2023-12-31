@@ -152,25 +152,37 @@ public:
 	int xPos;
 	int yPos;
 private:
-	BYTE _r2[12];
+	BYTE _r2[0xC];
 public:
 	// 0x1C
 	int row;
 private:
-	BYTE _r3[16];
+	BYTE _r3[0x10];
 public:
 	// 0x30
 	float xPosF;
 	// 0x34
 	float yPosF;
 private:
+	BYTE _r4_1[4];
+public:
+	// 0x3C
+	float xSpeed;
+	// 0x40
+	float ySpeed;
+private:
 	// all float
-	BYTE _r4[24];
+	BYTE _r4_2[0xC];
 public:
 	// 0x50
 	BYTE isDead;
 private:
-	BYTE _r5[8+3];
+	BYTE _r5_1[4];
+public:
+	// 0x58 子弹扔出去的方式，0-> 普通行,2->三头其中的两发, 6 -> 倒发 ,9 -> 自动追踪
+	int throwType;
+private:
+	BYTE _r5_2[3];
 public:
 	// 0x5C
 	int code;
