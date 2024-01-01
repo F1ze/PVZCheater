@@ -8,9 +8,9 @@ void gui::init() {
 
 	// Create application window
 	//ImGui_ImplWin32_EnableDpiAwareness();
-	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Plants vs. Zombies Cheater", nullptr };
 	::RegisterClassExW(&wc);
-	HWND hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"Dear ImGui DirectX11 Example", WS_POPUP, 0, 0, 3000, 3000, nullptr, nullptr, wc.hInstance, nullptr);
+	HWND hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"Plants vs. Zombies Cheater", WS_POPUP, 0, 0, 3000, 3000, nullptr, nullptr, wc.hInstance, nullptr);
 
 
 	// Initialize Direct3D
@@ -261,8 +261,11 @@ void mainGui()
 			static bool cardNoCD = false;
 			static bool plantNoCD = false;
 			static bool plantCasually = false;
+			static bool plantInvicible = false;
+			static bool plantLowHPSacrifice = false;
 			static bool noPause = false;
 			static bool zombieFreeze = false;
+			static bool zombieInvicible = false;
 			static bool seckillBullet = false;
 			static bool plantNoSleep = false;
 			static bool randomBullet = false;
@@ -282,8 +285,11 @@ void mainGui()
 				cardNoCD = false;
 				plantNoCD = false;
 				plantCasually = false;
+				plantInvicible = false;
+				plantLowHPSacrifice = false;
 				noPause = false;
 				zombieFreeze = false;
+				zombieInvicible = false;
 				seckillBullet = false;
 				plantNoSleep = false;
 				randomBullet = false;
@@ -363,6 +369,11 @@ void mainGui()
 				if (ImGui::Checkbox("Bullet Overlay", &bulletOverlay)) pvzServ->ToggleBulletOverlay(bulletOverlay);
 				ImGui::TableSetColumnIndex(1);
 				if (ImGui::Checkbox("Bullet AutoTrack", &bulletAutoTrack)) pvzServ->ToggleBulletAutoTrack(bulletAutoTrack);
+				ImGui::TableSetColumnIndex(2);
+				if (ImGui::Checkbox("Low HP Sacrifice", &plantLowHPSacrifice)) pvzServ->TogglePlantLowHPSacrifice(plantLowHPSacrifice);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				if (ImGui::Checkbox("Plant invivible", &plantInvicible)) pvzServ->TogglePlantInvicible(plantInvicible);
 				ImGui::EndTable();
 			}
 
@@ -379,6 +390,8 @@ void mainGui()
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				if (ImGui::Checkbox("Zombie Freeze", &zombieFreeze)) pvzServ->ToggleZombieFreeze(zombieFreeze);
+				ImGui::TableSetColumnIndex(1);
+				if (ImGui::Checkbox("Zombie invivible", &zombieInvicible)) pvzServ->ToggleZombieInvicible(zombieInvicible);
 				ImGui::EndTable();
 			}
 
@@ -434,8 +447,8 @@ void watchWindow(bool isInitial)
 	static bool no_close = true;
 
 	ImGui::SetNextWindowSize(ImVec2(600, -1));
-	//if (rect != nullptr) ImGui::SetNextWindowPos(ImVec2(rect->left, rect->bottom));
-	//else ImGui::SetNextWindowPos(ImVec2(0, 0));
+	if (rect != nullptr) ImGui::SetNextWindowPos(ImVec2(rect->left, rect->bottom));
+	else return;
 	if (!ImGui::Begin("Debug Window", nullptr, window_flags)) {
 		ImGui::End();
 		return;
@@ -448,236 +461,246 @@ void watchWindow(bool isInitial)
 		draw->AddRect(ImVec2(rect->left, rect->top), ImVec2(rect->right, rect->bottom), ImColor(0, 0, 255));
 	}
 
+	if (ImGui::BeginTabBar("WatchTabBar"))
 	{
-		ImGui::BeginGroup();
-		ImGui::SeparatorText("Zombie address");
-
-		static int zombieCnt = 0;
-		static int item_current = 0;
-		static const char** items = nullptr;
-		static std::vector<Zombie*> zbArr;
-		static const int maxShowZombieInfoCnt = 20;
-
-
-		if (!isInitial)
+		if (ImGui::BeginTabItem("Zombie address"))
 		{
-			zombieCnt = 0;
-			item_current = 0;
-			items = nullptr;
-			zbArr.clear();
-		}
+			ImGui::BeginGroup();
+			ImGui::SeparatorText("Zombie address");
 
-		for (auto i : zbArr) delete i;
-
-		zbArr = pvzServ->EnumerateZombie();
-		zombieCnt = min(zbArr.size(), maxShowZombieInfoCnt);
-		if (zombieCnt > 0 && ImGui::BeginTable("ZombieTable", 6)) {
-			const char** labelArr = new const char* [zombieCnt];
-			for (int i = 0; i < zombieCnt; i++) {
-				std::stringstream ss;
-				ss << std::uppercase << std::hex << zbArr[i]->addr;
-				auto s = ss.str();
-				labelArr[i] = new char[s.length() + 1];
-				strcpy((char*)labelArr[i], s.c_str());
-			}
-			items = labelArr;
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("Addr");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("Code");
-			ImGui::TableSetColumnIndex(2);
-			ImGui::Text("HP");
-			ImGui::TableSetColumnIndex(3);
-			ImGui::Text("Shield");
-			ImGui::TableSetColumnIndex(4);
-			ImGui::Text("Pos");
-			ImGui::TableSetColumnIndex(5);
-			ImGui::Text("Option");
+			static int zombieCnt = 0;
+			static int item_current = 0;
+			static const char** items = nullptr;
+			static std::vector<Zombie*> zbArr;
+			static const int maxShowZombieInfoCnt = 20;
 
 
-			for (int i = 0; i < zombieCnt; i++)
+			if (!isInitial)
 			{
+				zombieCnt = 0;
+				item_current = 0;
+				items = nullptr;
+				zbArr.clear();
+			}
+
+			for (auto i : zbArr) delete i;
+
+			zbArr = pvzServ->EnumerateZombie();
+			zombieCnt = min(zbArr.size(), maxShowZombieInfoCnt);
+			if (zombieCnt > 0 && ImGui::BeginTable("ZombieTable", 6)) {
+				const char** labelArr = new const char* [zombieCnt];
+				for (int i = 0; i < zombieCnt; i++) {
+					std::stringstream ss;
+					ss << std::uppercase << std::hex << zbArr[i]->addr;
+					auto s = ss.str();
+					labelArr[i] = new char[s.length() + 1];
+					strcpy((char*)labelArr[i], s.c_str());
+				}
+				items = labelArr;
+
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
-					if (ImGui::IsMouseDoubleClicked(0))
-						ImGui::SetClipboardText(items[i]);
-
+				ImGui::Text("Addr");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%d", zbArr[i]->code);
+				ImGui::Text("Code");
 				ImGui::TableSetColumnIndex(2);
-				ImGui::Text("%d", zbArr[i]->curBlood);
+				ImGui::Text("HP");
 				ImGui::TableSetColumnIndex(3);
-				ImGui::Text("%d", zbArr[i]->curShield);
+				ImGui::Text("Shield");
 				ImGui::TableSetColumnIndex(4);
-				ImGui::Text("(%d, %d)", zbArr[i]->xPosI, zbArr[i]->yPosI);
-				if (ImGui::TableSetColumnIndex(5)) {
-					char btnName[16];
-					sprintf_s(btnName, "K##zb-kill-%x", i);
-					if (ImGui::Button(btnName)) pvzServ->killZombie(zbArr[i]);
-					ImGui::SetItemTooltip("Kill");
+				ImGui::Text("Pos");
+				ImGui::TableSetColumnIndex(5);
+				ImGui::Text("Option");
+
+
+				for (int i = 0; i < zombieCnt; i++)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
+						if (ImGui::IsMouseDoubleClicked(0))
+							ImGui::SetClipboardText(items[i]);
+
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Text("%d", zbArr[i]->code);
+					ImGui::TableSetColumnIndex(2);
+					ImGui::Text("%d", zbArr[i]->curBlood);
+					ImGui::TableSetColumnIndex(3);
+					ImGui::Text("%d", zbArr[i]->curShield);
+					ImGui::TableSetColumnIndex(4);
+					ImGui::Text("(%d, %d)", zbArr[i]->xPosI, zbArr[i]->yPosI);
+					if (ImGui::TableSetColumnIndex(5)) {
+						char btnName[16];
+						sprintf_s(btnName, "K##zb-kill-%x", i);
+						if (ImGui::Button(btnName)) pvzServ->killZombie(zbArr[i]);
+						ImGui::SetItemTooltip("Kill");
+					}
+
+					/*delete btnName;*/
 				}
-
-				/*delete btnName;*/
+				ImGui::EndTable();
 			}
-			ImGui::EndTable();
+
+			ImGui::EndGroup();
+			ImGui::EndTabItem();
 		}
-
-		ImGui::EndGroup();
-	}
-	{
-		ImGui::BeginGroup();
-		ImGui::SeparatorText("Plant address");
-
-		static int plantCnt = 0;
-		static int item_current = 0;
-		static const char** items = nullptr;
-		static std::vector<Plant*> plantArr;
-		static const int maxShowPlantInfoCnt = 30;
-
-		if (!isInitial)
+		if (ImGui::BeginTabItem("Plant address"))
 		{
-			plantCnt = 0;
-			item_current = 0;
-			items = nullptr;
-		}
+			ImGui::BeginGroup();
+			ImGui::SeparatorText("Plant address");
 
-		for (auto i : plantArr) delete i;
-		plantArr = pvzServ->EnumeratePlants();
-		plantCnt = min(plantArr.size(), maxShowPlantInfoCnt);
+			static int plantCnt = 0;
+			static int item_current = 0;
+			static const char** items = nullptr;
+			static std::vector<Plant*> plantArr;
+			static const int maxShowPlantInfoCnt = 30;
 
-		if (plantCnt > 0 && ImGui::BeginTable("PlantTable", 6)) {
-			const char** labelArr = new const char* [plantCnt];
-			for (int i = 0; i < plantCnt; i++) {
-				std::stringstream ss;
-				ss << std::uppercase << std::hex << plantArr[i]->addr;
-				auto s = ss.str();
-				labelArr[i] = new char[s.length() + 1];
-				strcpy((char*)labelArr[i], s.c_str());
-			}
-			items = labelArr;
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("Addr");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("Code");
-			ImGui::TableSetColumnIndex(2);
-			ImGui::Text("HP");
-			ImGui::TableSetColumnIndex(3);
-			ImGui::Text("isAttackType");
-			ImGui::TableSetColumnIndex(4);
-			ImGui::Text("Pos");
-			ImGui::TableSetColumnIndex(5);
-			ImGui::Text("Operate");
-
-
-
-			for (int i = 0; i < plantCnt; i++)
+			if (!isInitial)
 			{
+				plantCnt = 0;
+				item_current = 0;
+				items = nullptr;
+			}
+
+			for (auto i : plantArr) delete i;
+			plantArr = pvzServ->EnumeratePlants();
+			plantCnt = min(plantArr.size(), maxShowPlantInfoCnt);
+
+			if (plantCnt > 0 && ImGui::BeginTable("PlantTable", 6)) {
+				const char** labelArr = new const char* [plantCnt];
+				for (int i = 0; i < plantCnt; i++) {
+					std::stringstream ss;
+					ss << std::uppercase << std::hex << plantArr[i]->addr;
+					auto s = ss.str();
+					labelArr[i] = new char[s.length() + 1];
+					strcpy((char*)labelArr[i], s.c_str());
+				}
+				items = labelArr;
+
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
-					if (ImGui::IsMouseDoubleClicked(0))
-						ImGui::SetClipboardText(items[i]);
-
+				ImGui::Text("Addr");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%d", plantArr[i]->code);
+				ImGui::Text("Code");
 				ImGui::TableSetColumnIndex(2);
-				ImGui::Text("%d", plantArr[i]->curBlood);
+				ImGui::Text("HP");
 				ImGui::TableSetColumnIndex(3);
-				ImGui::Text("%d", plantArr[i]->isAttackType);
+				ImGui::Text("isAttackType");
 				ImGui::TableSetColumnIndex(4);
-				ImGui::Text("(%d, %d)", plantArr[i]->xPos, plantArr[i]->yPos);
-				if (ImGui::TableSetColumnIndex(5)) {
-					char btnName[16];
-					sprintf_s(btnName, "K##plt-kill-%x", i);
-					if (ImGui::Button(btnName)) pvzServ->killPlant(plantArr[i]);
-					ImGui::SetItemTooltip("Kill");
+				ImGui::Text("Pos");
+				ImGui::TableSetColumnIndex(5);
+				ImGui::Text("Operate");
+
+
+
+				for (int i = 0; i < plantCnt; i++)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
+						if (ImGui::IsMouseDoubleClicked(0))
+							ImGui::SetClipboardText(items[i]);
+
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Text("%d", plantArr[i]->code);
+					ImGui::TableSetColumnIndex(2);
+					ImGui::Text("%d", plantArr[i]->curBlood);
+					ImGui::TableSetColumnIndex(3);
+					ImGui::Text("%d", plantArr[i]->isAttackType);
+					ImGui::TableSetColumnIndex(4);
+					ImGui::Text("(%d, %d)", plantArr[i]->xPos, plantArr[i]->yPos);
+					if (ImGui::TableSetColumnIndex(5)) {
+						char btnName[16];
+						sprintf_s(btnName, "K##plt-kill-%x", i);
+						if (ImGui::Button(btnName)) pvzServ->killPlant(plantArr[i]);
+						ImGui::SetItemTooltip("Kill");
+					}
+
+					/*delete btnName;*/
 				}
-
-				/*delete btnName;*/
+				ImGui::EndTable();
 			}
-			ImGui::EndTable();
+			ImGui::EndGroup();
+			ImGui::EndTabItem();
 		}
-		ImGui::EndGroup();
-	}
-	{
-		ImGui::BeginGroup();
-		ImGui::SeparatorText("Bullet address");
-
-		static int bullet = 0;
-		static int item_current = 0;
-		static const char** items = nullptr;
-		static std::vector<Bullet*> bulletArr;
-		static const int maxShowBulletCnt = 30;
-
-		if (!isInitial)
+		if (ImGui::BeginTabItem("Bullet address"))
 		{
-			bullet = 0;
-			item_current = 0;
-			items = nullptr;
-		}
+			ImGui::BeginGroup();
+			ImGui::SeparatorText("Bullet address");
 
-		for (auto i : bulletArr) delete i;
-		bulletArr = pvzServ->EnumerateBullet();
-		bullet = min(bulletArr.size(), maxShowBulletCnt);
+			static int bullet = 0;
+			static int item_current = 0;
+			static const char** items = nullptr;
+			static std::vector<Bullet*> bulletArr;
+			static const int maxShowBulletCnt = 30;
 
-		if (bullet > 0 && ImGui::BeginTable("BulletTable", 5)) {
-			const char** labelArr = new const char* [bullet];
-			for (int i = 0; i < bullet; i++) {
-				std::stringstream ss;
-				ss << std::uppercase << std::hex << bulletArr[i]->addr;
-				auto s = ss.str();
-				labelArr[i] = new char[s.length() + 1];
-				strcpy((char*)labelArr[i], s.c_str());
-			}
-			items = labelArr;
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("Addr");
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("Code");
-			ImGui::TableSetColumnIndex(2);
-			ImGui::Text("row");
-			ImGui::TableSetColumnIndex(3);
-			ImGui::Text("Pos");
-			ImGui::TableSetColumnIndex(4);
-			ImGui::Text("Operate");
-
-
-
-			for (int i = 0; i < bullet; i++)
+			if (!isInitial)
 			{
+				bullet = 0;
+				item_current = 0;
+				items = nullptr;
+			}
+
+			for (auto i : bulletArr) delete i;
+			bulletArr = pvzServ->EnumerateBullet();
+			bullet = min(bulletArr.size(), maxShowBulletCnt);
+
+			if (bullet > 0 && ImGui::BeginTable("BulletTable", 5)) {
+				const char** labelArr = new const char* [bullet];
+				for (int i = 0; i < bullet; i++) {
+					std::stringstream ss;
+					ss << std::uppercase << std::hex << bulletArr[i]->addr;
+					auto s = ss.str();
+					labelArr[i] = new char[s.length() + 1];
+					strcpy((char*)labelArr[i], s.c_str());
+				}
+				items = labelArr;
+
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
-					if (ImGui::IsMouseDoubleClicked(0))
-						ImGui::SetClipboardText(items[i]);
-
+				ImGui::Text("Addr");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%d", bulletArr[i]->code);
+				ImGui::Text("Code");
 				ImGui::TableSetColumnIndex(2);
-				ImGui::Text("%d", bulletArr[i]->row);
+				ImGui::Text("row");
 				ImGui::TableSetColumnIndex(3);
-				ImGui::Text("(%d, %d)", bulletArr[i]->xPos, bulletArr[i]->yPos);
-				if (ImGui::TableSetColumnIndex(4)) {
-					char btnName[16];
-					sprintf_s(btnName, "K##blt-kill-%x", i);
-					if (ImGui::Button(btnName)) pvzServ->killBullet(bulletArr[i]);
-					ImGui::SetItemTooltip("Kill");
+				ImGui::Text("Pos");
+				ImGui::TableSetColumnIndex(4);
+				ImGui::Text("Operate");
+
+
+
+				for (int i = 0; i < bullet; i++)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
+						if (ImGui::IsMouseDoubleClicked(0))
+							ImGui::SetClipboardText(items[i]);
+
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Text("%d", bulletArr[i]->code);
+					ImGui::TableSetColumnIndex(2);
+					ImGui::Text("%d", bulletArr[i]->row);
+					ImGui::TableSetColumnIndex(3);
+					ImGui::Text("(%d, %d)", bulletArr[i]->xPos, bulletArr[i]->yPos);
+					if (ImGui::TableSetColumnIndex(4)) {
+						char btnName[16];
+						sprintf_s(btnName, "K##blt-kill-%x", i);
+						if (ImGui::Button(btnName)) pvzServ->killBullet(bulletArr[i]);
+						ImGui::SetItemTooltip("Kill");
+					}
+
+
+
+
 				}
-
-				
-
-
+				ImGui::EndTable();
 			}
-			ImGui::EndTable();
+			ImGui::EndGroup();
+			ImGui::EndTabItem();
 		}
-		ImGui::EndGroup();
+		ImGui::EndTabBar();
 	}
 
 

@@ -312,52 +312,6 @@ BYTE* TramHook32(BYTE* src, BYTE* dst, const uintptr_t len)
 	return gateway;
 }
 
-// ===============================   Random Bullet Part start ===================================
-
-typedef void (*sub_470E29)();
-
-sub_470E29 fn;
-
-// https://stackoverflow.com/questions/4099026/how-to-hook-usercall-userpurge-spoils-functions
-__declspec(naked) void func_hook()
-{
-	__asm
-	{
-		pushad
-		call rand
-		cdq
-		mov ecx, 13
-		idiv ecx
-		mov eax, edx
-		mov ss : [esp + 0x1C] , eax
-		popad
-		jmp fn
-	}
-}
-
-
-void RandomBullet(bool* flag)
-{
-	auto func = (LPVOID)0x470DF0;
-
-	static bool hasCreate = false;
-
-
-	if (*flag)
-	{
-		fn = (sub_470E29)0x470E29;
-		fn = (sub_470E29)TramHook32((BYTE*)fn, (BYTE*)func_hook, 5);
-	}
-	else {
-		void* start = (void*)0x470E29;
-		BYTE ori[] = { 0x89, 0x45, 0x5C, 0x8B, 0xC6 };
-		DWORD prt;
-		VirtualProtect(start, 5, PAGE_EXECUTE_READWRITE, &prt);
-		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
-		VirtualProtect(start, 5, prt, &prt);
-	}
-}
-
 
 //  =================  Bomb all screen hook  =====================
 
@@ -393,16 +347,60 @@ void BombFullScreen(bool* flag)
 	}
 }
 
+// ===============================   Random Bullet Part start ===================================
+
+// 470E29
+typedef void (*RandomBulletFn)();
+
+RandomBulletFn oriRandomBullet;
+
+// https://stackoverflow.com/questions/4099026/how-to-hook-usercall-userpurge-spoils-functions
+__declspec(naked) void detourRandomBullet()
+{
+	__asm
+	{
+		pushad
+		call rand
+		cdq
+		mov ecx, 13
+		idiv ecx
+		mov eax, edx
+		mov ss : [esp + 0x1C] , eax
+		popad
+		jmp oriRandomBullet
+	}
+}
+
+
+void RandomBullet(bool* flag)
+{
+	auto func = (LPVOID)0x470DF0;
+
+	if (*flag)
+	{
+		oriRandomBullet = (RandomBulletFn)0x470E29;
+		oriRandomBullet = (RandomBulletFn)TramHook32((BYTE*)oriRandomBullet, (BYTE*)detourRandomBullet, 5);
+	}
+	else {
+		void* start = (void*)0x470E29;
+		BYTE ori[] = { 0x89, 0x45, 0x5C, 0x8B, 0xC6 };
+		DWORD prt;
+		VirtualProtect(start, 5, PAGE_EXECUTE_READWRITE, &prt);
+		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
+		VirtualProtect(start, 5, prt, &prt);
+	}
+}
+
 
 // ================== Bullet Auto Track hook ======================
 
-typedef int (__stdcall *BulletMoveFn)(int bulletAddr);
+typedef int(__stdcall* BulletMoveFn)(int bulletAddr);
 BulletMoveFn oriBulletMoveFn;
 
 int __stdcall detourBulletMoveFn(int bulletAddr) {
 
 	int bulletMoveType = *(int*)(bulletAddr + 0x58);
-	float &xSpeed = *(float*)(bulletAddr + 0x3C);
+	float& xSpeed = *(float*)(bulletAddr + 0x3C);
 	if (bulletMoveType == 0 || bulletMoveType == 2 || bulletMoveType == 6) {
 		auto arr = getAllZombie();
 		int sz = arr.size();
@@ -415,7 +413,7 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 				int ax = *(int*)(a + 0x8);
 				int bx = *(int*)(b + 0x8);
 				return ax < bx;
-			});
+				});
 			if (*(int*)(arr[0] + 0x8) <= 200) idx = 0;
 			int zb = arr[idx];
 			*(int*)(bulletAddr + 0x88) = *(int*)(zb + 0x164);
@@ -427,9 +425,8 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 			*(int*)(bulletAddr + 0x88) = 0;
 			xSpeed = 3;
 		}
-		
 	}
-	
+
 	return oriBulletMoveFn(bulletAddr);
 }
 
@@ -461,5 +458,41 @@ void BulletAutoTrack(bool* flag)
 		VirtualProtect((LPVOID)0x46B143, 2, PAGE_EXECUTE_READWRITE, &old);
 		*(WORD*)(0x46B143) = 0x4374;
 		VirtualProtect((LPVOID)0x46B143, 2, old, &old);
+	}
+}
+
+
+// ==================== Plant low hp sacrifice ============================
+typedef void(*ZombieEatPlant)();
+ZombieEatPlant oriZombieEatPlant;
+
+__declspec(naked) void detourZombieEatPlant() {
+	__asm {
+		pushad
+		cmp dword ptr [ecx+0x40], 0xF
+		jg finish
+		mov dword ptr [ecx+0x24], 0x11
+		finish:
+		popad
+		jmp oriZombieEatPlant
+	}
+}
+
+
+void PlantLowHPSacrifice(bool* flag)
+{
+
+	if (*flag)
+	{
+		oriZombieEatPlant = (ZombieEatPlant)0x5404D0;
+		oriZombieEatPlant = (ZombieEatPlant)TramHook32((BYTE*)oriZombieEatPlant, (BYTE*)detourZombieEatPlant, 7);
+	}
+	else {
+		void* start = (void*)0x5404D0;
+		BYTE ori[] = { 0x6A, 0xFF, 0x68, 0x48, 0xBC, 0x6C, 0x00 };
+		DWORD prt;
+		VirtualProtect(start, 7, PAGE_EXECUTE_READWRITE, &prt);
+		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
+		VirtualProtect(start, 7, prt, &prt);
 	}
 }

@@ -179,10 +179,8 @@ public:
 private:
 	BYTE _r5_1[4];
 public:
-	// 0x58 子弹扔出去的方式，0-> 普通行,2->三头其中的两发, 6 -> 倒发 ,9 -> 自动追踪
+	// 0x58 子弹扔出去的方式，0-> 普通行, 1-> 投掷，2->三头其中的两发, 6 -> 倒发 ,9 -> 自动追踪
 	int throwType;
-private:
-	BYTE _r5_2[3];
 public:
 	// 0x5C
 	int code;

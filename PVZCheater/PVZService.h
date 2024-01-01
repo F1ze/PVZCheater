@@ -78,6 +78,11 @@ public:
 
 	void TogglePlantNoCD(bool flag);
 	void TogglePlantNoSleep(bool flag);
+	void TogglePlantInvicible(bool flag);
+	void TogglePlantLowHPSacrifice(bool flag);
+
+
+	void ToggleZombieInvicible(bool flag);
 
 	void TogglePlantRandomBullet(bool flag);
 

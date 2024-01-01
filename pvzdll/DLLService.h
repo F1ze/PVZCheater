@@ -56,3 +56,5 @@ EXPORT void RandomBullet(bool* flag);
 EXPORT void BombFullScreen(bool* flag);
 
 EXPORT void BulletAutoTrack(bool* flag);
+
+EXPORT void PlantLowHPSacrifice(bool* flag);

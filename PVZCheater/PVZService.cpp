@@ -287,6 +287,35 @@ void PVZService::TogglePlantNoSleep(bool flag)
 	else ProcessUtil::Write<QWORD>(this->pHandle, 0x46219F, 0x4F8B00000291840F);
 }
 
+void PVZService::TogglePlantInvicible(bool flag)
+{
+	// 0x540680
+	if (flag) ProcessUtil::Write<DWORD>(this->pHandle, 0x540680, 0x90909090);
+	else ProcessUtil::Write<DWORD>(this->pHandle, 0x540680, 0xFC404683);
+}
+
+void PVZService::TogglePlantLowHPSacrifice(bool flag)
+{
+	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &flag, sizeof(bool));
+	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "PlantLowHPSacrifice", { paddr });
+}
+
+void PVZService::ToggleZombieInvicible(bool flag)
+{
+	if (flag) {
+		// shield
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x5419FA, 0xC3F6909090909090);
+		// hp
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x541CE4, 0x91E8909090909090);
+	}
+	else {
+		// sheild
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x5419FA, 0xC3F6000000D08D89);
+		// hp
+		ProcessUtil::Write<QWORD>(this->pHandle, 0x541CE4, 0x91E8000000C8AF89);
+	}
+}
+
 void PVZService::TogglePlantRandomBullet(bool flag)
 {
 	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &flag, sizeof(bool));
