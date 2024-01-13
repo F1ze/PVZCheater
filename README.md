@@ -6,7 +6,7 @@
 
 This is a Plant vs. Zombie cheater.
 
-![image-20240101144135594](README.assets/image-20240101144135594.png)
+![image-20240114024606789](README.assets/image-20240114024606789.png)
 
 ![image-20240101144210283](README.assets/image-20240101144210283.png)
 
