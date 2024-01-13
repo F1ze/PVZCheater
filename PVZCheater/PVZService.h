@@ -22,6 +22,7 @@ private:
 	LPRECT cliRect = nullptr;
 	const std::vector<DWORD> baseOffset = { 0x329670, 0x868 };
 	const std::vector<DWORD> sunOffset = {0x329670, 0x868, 0x5578};
+	const std::vector<DWORD> mouseStyleOffset = {0x329670, 0x868, 0x150, 0x30};
 	const std::vector<DWORD> slotCountOffset = {0x329670, 0x868, 0x15c, 0x24};
 	const std::vector<DWORD> slotOffset = {0x329670, 0x868, 0x15c, 0x5c};
 public:
@@ -76,10 +77,12 @@ public:
 	*/
 	void ToggleSeckillBullet(bool flag);
 
+	// For Chomper, potato mine, spikeweed, magnet, cannon
 	void TogglePlantNoCD(bool flag);
 	void TogglePlantNoSleep(bool flag);
 	void TogglePlantInvicible(bool flag);
 	void TogglePlantLowHPSacrifice(bool flag);
+	void ToggleLockShovel(bool flag);
 
 
 	void ToggleZombieInvicible(bool flag);
@@ -91,6 +94,8 @@ public:
 	void ToggleBulletOverlay(bool flag);
 
 	void ToggleBulletAutoTrack(bool flag);
+
+	void SetPlantAttackSpeed(bool flag, float rate);
 	
 
 	void AddPlant(DWORD row, DWORD col, DWORD code);

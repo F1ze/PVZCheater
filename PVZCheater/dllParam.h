@@ -33,3 +33,11 @@ struct GetNextPlantParam
 	GetNextPlantParam() {};
 	GetNextPlantParam(DWORD retValue, DWORD startAddress) : retValue(retValue), startAddress(startAddress) {};
 };
+
+struct SetPlantAttackSpeedParam
+{
+	bool flag;
+	float rate;
+	SetPlantAttackSpeedParam() {};
+	SetPlantAttackSpeedParam(bool flag, float rate) : flag(flag), rate(rate) {};
+};

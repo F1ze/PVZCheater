@@ -10,7 +10,8 @@ void gui::init() {
 	//ImGui_ImplWin32_EnableDpiAwareness();
 	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Plants vs. Zombies Cheater", nullptr };
 	::RegisterClassExW(&wc);
-	HWND hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"Plants vs. Zombies Cheater", WS_POPUP, 0, 0, 3000, 3000, nullptr, nullptr, wc.hInstance, nullptr);
+	
+	HWND hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"Plants vs. Zombies Cheater", WS_POPUP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), nullptr, nullptr, wc.hInstance, nullptr);
 
 
 	// Initialize Direct3D
@@ -259,6 +260,7 @@ void mainGui()
 			static bool SunCntNotDecrease = false;
 			static bool autoSunCollect = false;
 			static bool cardNoCD = false;
+			static bool lockShovel = false;
 			static bool plantNoCD = false;
 			static bool plantCasually = false;
 			static bool plantInvicible = false;
@@ -272,6 +274,7 @@ void mainGui()
 			static bool bombFullScreen = false;
 			static bool bulletOverlay = false;
 			static bool bulletAutoTrack = false;
+			static bool enableAttackSpeed = false;
 
 			static int slotCount = 0;
 
@@ -283,6 +286,7 @@ void mainGui()
 				SunCntNotDecrease = false;
 				autoSunCollect = false;
 				cardNoCD = false;
+				lockShovel = false;
 				plantNoCD = false;
 				plantCasually = false;
 				plantInvicible = false;
@@ -295,6 +299,8 @@ void mainGui()
 				randomBullet = false;
 				bombFullScreen = false;
 				bulletOverlay = false;
+				bulletAutoTrack = false;
+				enableAttackSpeed = false;
 
 				slotCount = 0;
 				curSlot = 0;
@@ -336,6 +342,9 @@ void mainGui()
 				if (ImGui::Checkbox("No Pause", &noPause)) pvzServ->ToggleNoPause(noPause);
 				ImGui::TableSetColumnIndex(2);
 				if (ImGui::Checkbox("Card No CD", &cardNoCD)) pvzServ->ToggleCardNoCD(cardNoCD);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				if (ImGui::Checkbox("Lock Shovel", &lockShovel)) pvzServ->ToggleLockShovel(lockShovel);
 				ImGui::EndTable();
 			}
 
@@ -373,7 +382,24 @@ void mainGui()
 				if (ImGui::Checkbox("Low HP Sacrifice", &plantLowHPSacrifice)) pvzServ->TogglePlantLowHPSacrifice(plantLowHPSacrifice);
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Checkbox("Plant invivible", &plantInvicible)) pvzServ->TogglePlantInvicible(plantInvicible);
+				if (ImGui::Checkbox("Plant invincible", &plantInvicible)) pvzServ->TogglePlantInvicible(plantInvicible);
+				if (ImGui::TableSetColumnIndex(1)) {
+					static float plantAttackSpeed = 0.0f;
+
+					if (ImGui::Checkbox("##AttackSpeed", &enableAttackSpeed)) {
+						pvzServ->SetPlantAttackSpeed(enableAttackSpeed, plantAttackSpeed);
+					}
+					ImGui::SameLine();
+					if (enableAttackSpeed) {
+						if (ImGui::SliderFloat("", &plantAttackSpeed, 0, 1, "%.2f")) {
+							pvzServ->SetPlantAttackSpeed(enableAttackSpeed, plantAttackSpeed);
+						}
+						ImGui::SetItemTooltip("Attack Speed");
+					}
+					else ImGui::Text("Attack Speed");
+					
+					
+				}
 				ImGui::EndTable();
 			}
 
@@ -391,7 +417,7 @@ void mainGui()
 				ImGui::TableSetColumnIndex(0);
 				if (ImGui::Checkbox("Zombie Freeze", &zombieFreeze)) pvzServ->ToggleZombieFreeze(zombieFreeze);
 				ImGui::TableSetColumnIndex(1);
-				if (ImGui::Checkbox("Zombie invivible", &zombieInvicible)) pvzServ->ToggleZombieInvicible(zombieInvicible);
+				if (ImGui::Checkbox("Zombie invincible", &zombieInvicible)) pvzServ->ToggleZombieInvicible(zombieInvicible);
 				ImGui::EndTable();
 			}
 

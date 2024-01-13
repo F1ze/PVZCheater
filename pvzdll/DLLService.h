@@ -58,3 +58,12 @@ EXPORT void BombFullScreen(bool* flag);
 EXPORT void BulletAutoTrack(bool* flag);
 
 EXPORT void PlantLowHPSacrifice(bool* flag);
+
+struct SetPlantAttackSpeedParam
+{
+	bool flag;
+	float rate;
+	SetPlantAttackSpeedParam(bool flag, float rate) : flag(flag), rate(rate) {};
+};
+
+EXPORT void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p);

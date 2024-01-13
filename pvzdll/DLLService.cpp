@@ -119,23 +119,74 @@ std::vector<DWORD> getAllZombie()
 		mov eax, base
 		mov eax, ds: [eax]
 		mov eax, ds : [eax + 0x868]
+		test eax, eax
+		je NotInGame
 		mov ebx, ds : [eax + 0xA8]
 		mov zbArr, ebx
 		mov eax, ds : [eax + 0xAC]
 		mov len, eax
+		jmp Finish
+		NotInGame:
+		mov zbArr, 0
+		Finish:
 		popad
 	}
 
 	std::vector<DWORD> arr;
-	const int zbSz = 0x168;
-	DWORD arrEnd = zbArr + len * zbSz;
+	if (zbArr != 0) {
+		const int zbSz = 0x168;
+		DWORD arrEnd = zbArr + len * zbSz;
 
-	for (DWORD i = zbArr; i < arrEnd; i += zbSz)
-	{
-		BYTE sign = *(BYTE*)(i + 0xEC);
-		if (!sign) arr.push_back(i);
+		for (DWORD i = zbArr; i < arrEnd; i += zbSz)
+		{
+			BYTE sign = *(BYTE*)(i + 0xEC);
+			int sign0x164 = *(int*)(i + 0x164);
+			if (!sign && (sign0x164 & 0xFFFF0000) != 0) arr.push_back(i);
+		}
+	}
+	return arr;
+
+}
+
+
+std::vector<DWORD> getAllPlant()
+{
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = (DWORD)hMod + 0x329670;
+
+	DWORD pltArr = 0;
+	DWORD len = 0;
+
+	__asm {
+		pushad
+		mov eax, base
+		mov eax, ds: [eax]
+		mov eax, ds : [eax + 0x868]
+		test eax, eax
+		je NotInGame
+		mov ebx, ds : [eax + 0xC4]
+		mov pltArr, ebx
+		mov eax, ds : [eax + 0xC8]
+		mov len, eax
+		jmp Finish
+		NotInGame:
+		mov pltArr, 0
+		Finish:
+		popad
 	}
 
+	std::vector<DWORD> arr;
+	if (pltArr) {
+		const int pltSz = 0x14C;
+		DWORD arrEnd = pltArr + len * pltSz;
+
+		for (DWORD i = pltArr; i < arrEnd; i += pltSz)
+		{
+			BYTE sign = *(BYTE*)(i + 0x141);
+			int sign0x148 = *(int*)(i + 0x148);
+			if (!sign && (sign0x148 & 0xFFFF0000) != 0) arr.push_back(i);
+		}
+	}
 	return arr;
 
 }
@@ -413,7 +464,7 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 				int ax = *(int*)(a + 0x8);
 				int bx = *(int*)(b + 0x8);
 				return ax < bx;
-				});
+			});
 			if (*(int*)(arr[0] + 0x8) <= 200) idx = 0;
 			int zb = arr[idx];
 			*(int*)(bulletAddr + 0x88) = *(int*)(zb + 0x164);
@@ -494,5 +545,88 @@ void PlantLowHPSacrifice(bool* flag)
 		VirtualProtect(start, 7, PAGE_EXECUTE_READWRITE, &prt);
 		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
 		VirtualProtect(start, 7, prt, &prt);
+	}
+}
+
+// ==================== Plant Attack Speed ============================
+
+float attackSpeedRate = 0.0;
+
+// 普通卡豌豆射手类
+typedef void(*NormalBeanPlantAttackSpeedFn)();
+NormalBeanPlantAttackSpeedFn oriNormalBeanPlantAttackSpeedFn;
+
+__declspec(naked) void detourSetNormalBeanPlantAttackSpeedFn() {
+	__asm {
+		pushad
+		mov[esi + 0x90], 2
+		push 140
+		fild ds: [esp]
+		fld attackSpeedRate
+		fmulp   st(1), st(0)
+		fistp ds : [esp]
+		mov ebx, 150
+		sub ebx, ds : [esp]
+		mov [esi+0x5C], ebx
+		pop ecx
+		popad
+		jmp oriNormalBeanPlantAttackSpeedFn
+	}
+}
+
+void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p)
+{
+	static std::atomic<bool> isCreateHook = false;
+	bool expect = false;
+	// 具体修改逻辑在函数462840中
+	if (p->flag)
+	{
+		attackSpeedRate = p->rate;
+		if (isCreateHook.compare_exchange_strong(expect, true)) {
+			// 第一次创建hook
+
+			// 普通卡豌豆射手类
+			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)0x462990;
+			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)TramHook32((BYTE*)oriNormalBeanPlantAttackSpeedFn, (BYTE*)detourSetNormalBeanPlantAttackSpeedFn, 10);
+			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)((DWORD)oriNormalBeanPlantAttackSpeedFn + 10);
+
+			DWORD prt;
+			auto je1 = (LPVOID)0x46299D;
+			VirtualProtect(je1, 2, PAGE_EXECUTE_READWRITE, &prt);
+			*(WORD*)je1 = 0x28EB;
+			VirtualProtect(je1, 2, prt, &prt);
+		}
+
+	}
+	else 
+	{
+		expect = true;
+		if (isCreateHook.compare_exchange_strong(expect, false)) {
+			DWORD prt;
+
+			// 还原现场
+
+			// 普通卡豌豆射手类
+			void* start = (void*)0x462990;
+			BYTE ori[] = { 0xC7, 0x86, 0x90, 0x00, 0x00, 0x00, 0x23, 0x00, 0x00, 0x00 };
+			VirtualProtect(start, 10, PAGE_EXECUTE_READWRITE, &prt);
+			memcpy_s(start, sizeof(ori), ori, sizeof(ori));
+			VirtualProtect(start, 10, prt, &prt);
+
+			auto je1 = (LPVOID)0x46299D;
+			VirtualProtect(je1, 2, PAGE_EXECUTE_READWRITE, &prt);
+			*(WORD*)je1 = 0x3174;
+			VirtualProtect(je1, 2, prt, &prt);
+
+			// 还原所有原来的CD
+			auto arr = getAllPlant();
+			for (auto plt : arr) {
+				int code = *(int*)(plt + 0x24);
+				if (code == 0 || code == 5 || code == 7 || code == 28 || code == 52) {
+					*(int*)(plt + 0x5C) = 150;
+				}
+			}
+		}
+
 	}
 }

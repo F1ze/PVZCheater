@@ -18,8 +18,14 @@ public:
 	int xPosI;
 	// +C
 	int yPosI;
+	// +10
+	int xWidth;
+	// +14
+	int yWitdth;
+	// +0x18
+	BYTE isVisible;
 private:
-	BYTE _r2[0xC];
+	BYTE _r2[0x3];
 public:
 	// +1C
 	int row;
@@ -93,8 +99,14 @@ public:
 	int xPos;
 	// +C
 	int yPos;
+	// +10
+	int xWidth;
+	// +14
+	int yWitdth;
+	// +0x18
+	BYTE isVisible;
 private:
-	BYTE _r2_0[0xC];
+	BYTE _r2_0[0x3];
 public:
 	// 0x1C
 	int row;

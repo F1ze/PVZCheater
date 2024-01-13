@@ -300,6 +300,24 @@ void PVZService::TogglePlantLowHPSacrifice(bool flag)
 	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "PlantLowHPSacrifice", { paddr });
 }
 
+void PVZService::ToggleLockShovel(bool flag)
+{
+	static bool finish = false;
+	if (flag) {
+		auto base = (DWORD)ProcessUtil::GetModule(this->pid, this->exeFile).first;
+		auto addr = ProcessUtil::ReadMultiLevelPointer<DWORD>(this->pHandle, base, mouseStyleOffset);
+		std::thread t([this, addr] {
+			while (!finish) {
+				ProcessUtil::Write<DWORD>(this->pHandle, addr, 6);
+				Sleep(200);
+			}
+			BOOST_LOG_TRIVIAL(info) << "ToggleLockShovel Thread exit" << std::endl;
+		});
+		t.detach();
+	}
+	else finish = true;
+}
+
 void PVZService::ToggleZombieInvicible(bool flag)
 {
 	if (flag) {
@@ -356,6 +374,15 @@ void PVZService::ToggleBulletAutoTrack(bool flag)
 {
 	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &flag, sizeof(bool));
 	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "BulletAutoTrack", { paddr });
+}
+
+void PVZService::SetPlantAttackSpeed(bool flag, float rate)
+{
+	if (this->isInjectedDLL) {
+		SetPlantAttackSpeedParam* p = new SetPlantAttackSpeedParam(flag, rate);
+		auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, p, sizeof(SetPlantAttackSpeedParam));
+		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "SetPlantAttackSpeed", { paddr });
+	}
 }
 
 void PVZService::AddPlant(DWORD row, DWORD col, DWORD code)
