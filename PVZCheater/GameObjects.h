@@ -34,7 +34,7 @@ private:
 public:
 	// +0x24
 	int code;
-	// +0x28 1->fade away, 2->be black 3->head execution
+	// +0x28 1->fade away, 2->be black 3->head execution, 32->无视植物
 	int behaviorType;
 	// +0x2C
 	float xPosF;
@@ -118,6 +118,7 @@ public:
 	// +28
 	int col;
 private:
+	// +3C 应该是和场景有关的，修改会造成植物移动 2 9  20
 	BYTE _r3[0x14];
 public:
 	// +40
@@ -127,8 +128,12 @@ public:
 	// +48
 	int isAttackType;
 private:
-	BYTE _r4[0xC];
+	BYTE _r4[0x4];
 public:
+	// +50
+	int bombCD;
+	// +54
+	int reloadCD;
 	// +58
 	int curCD;
 	// +5C
@@ -141,13 +146,19 @@ private:
 public:
 	// 0x90
 	int emitCD;
+	// 0x94
+	int uniqueID;
 private:
-	BYTE _r5_2[0xAD];
+	BYTE _r5_2[0xA9];
 public:
 	// 0x141
 	BYTE isDead;
+	// 0x142
+	BYTE isDead_2;
+	// 0x143
+	BYTE isDisableAttack;
 private:
-	BYTE _r6[0xA];
+	BYTE _r6[0x8];
 public:
 	DWORD addr;
 
@@ -197,6 +208,7 @@ public:
 	// 0x5C
 	int code;
 private:
+	// 0x74 PlantAttackType 直线型、爆炸型等
 	BYTE _r6[4*13];
 public:
 	DWORD addr;

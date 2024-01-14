@@ -126,10 +126,10 @@ std::vector<DWORD> getAllZombie()
 		mov eax, ds : [eax + 0xAC]
 		mov len, eax
 		jmp Finish
-		NotInGame:
+		NotInGame :
 		mov zbArr, 0
-		Finish:
-		popad
+			Finish :
+			popad
 	}
 
 	std::vector<DWORD> arr;
@@ -169,10 +169,10 @@ std::vector<DWORD> getAllPlant()
 		mov eax, ds : [eax + 0xC8]
 		mov len, eax
 		jmp Finish
-		NotInGame:
+		NotInGame :
 		mov pltArr, 0
-		Finish:
-		popad
+			Finish :
+			popad
 	}
 
 	std::vector<DWORD> arr;
@@ -452,7 +452,8 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 
 	int bulletMoveType = *(int*)(bulletAddr + 0x58);
 	float& xSpeed = *(float*)(bulletAddr + 0x3C);
-	if (bulletMoveType == 0 || bulletMoveType == 2 || bulletMoveType == 6) {
+	// 7 -> star
+	if (bulletMoveType <= 2 || bulletMoveType == 6 || bulletMoveType == 7) {
 		auto arr = getAllZombie();
 		int sz = arr.size();
 		if (sz > 0) {
@@ -464,7 +465,7 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 				int ax = *(int*)(a + 0x8);
 				int bx = *(int*)(b + 0x8);
 				return ax < bx;
-			});
+				});
 			if (*(int*)(arr[0] + 0x8) <= 200) idx = 0;
 			int zb = arr[idx];
 			*(int*)(bulletAddr + 0x88) = *(int*)(zb + 0x164);
@@ -478,6 +479,9 @@ int __stdcall detourBulletMoveFn(int bulletAddr) {
 		}
 	}
 
+	int yPos = *(int*)(bulletAddr + 0xC);
+	if (yPos < -600 || yPos > 2000) *(BYTE*)(bulletAddr + 0x50) = 1;
+
 	return oriBulletMoveFn(bulletAddr);
 }
 
@@ -489,6 +493,21 @@ void BulletAutoTrack(bool* flag)
 	bool expect = false;
 
 	LPVOID func = (LPVOID)0x471F70;
+	// Throw Bullet Movement -> Non-throw
+	LPVOID throwBulletMovementTarget = (LPVOID)0x472380;
+	BYTE throwBulletMovementPatch[] = { 0xEB, 0x07 };
+	BYTE throwBulletMovementOrigin[] = { 0x75, 0x07 };
+
+	// can attack zombies behind plants
+	LPVOID attackBehindTarget = (LPVOID)0x46B29A;
+	BYTE attackBehindPatch[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
+	BYTE attackBehindOrigin[] = { 0x0F, 0x8C, 0xA1, 0x00, 0x00, 0x00 };
+
+	// Star Auto Track
+	LPVOID starPatchTarget = (LPVOID)0x462E3B;
+	BYTE starPatch[] = { 0xE9, 0xE6, 0x01, 0x0, 0x0, 0x90 };
+	BYTE starPatchOrigin[] = { 0x0F, 0x84, 0xC1, 0x01, 0x0, 0x0 };
+
 
 	if (isCreateHook.compare_exchange_strong(expect, true)) {
 		MH_CreateHook(func, &detourBulletMoveFn, reinterpret_cast<LPVOID*>(&oriBulletMoveFn));
@@ -500,6 +519,20 @@ void BulletAutoTrack(bool* flag)
 		VirtualProtect((LPVOID)0x46B143, 2, PAGE_EXECUTE_READWRITE, &old);
 		*(WORD*)(0x46B143) = 0x43EB;
 		VirtualProtect((LPVOID)0x46B143, 2, old, &old);
+		//// Throw Bullet Movement -> Non-throw
+		//VirtualProtect(throwBulletMovementTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(throwBulletMovementTarget, sizeof(throwBulletMovementPatch), throwBulletMovementPatch, sizeof(throwBulletMovementPatch));
+		//VirtualProtect(throwBulletMovementTarget, 6, old, &old);
+
+		//// can attack zombies behind plants
+		//VirtualProtect(attackBehindTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(attackBehindTarget, sizeof(attackBehindPatch), attackBehindPatch, sizeof(attackBehindPatch));
+		//VirtualProtect(attackBehindTarget, 6, old, &old);
+
+		//// star auto track
+		//VirtualProtect(starPatchTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(starPatchTarget, sizeof(starPatch), starPatch, sizeof(starPatch));
+		//VirtualProtect(starPatchTarget, 6, old, &old);
 	}
 	else
 	{
@@ -509,6 +542,18 @@ void BulletAutoTrack(bool* flag)
 		VirtualProtect((LPVOID)0x46B143, 2, PAGE_EXECUTE_READWRITE, &old);
 		*(WORD*)(0x46B143) = 0x4374;
 		VirtualProtect((LPVOID)0x46B143, 2, old, &old);
+		//// Throw Bullet Movement -> Non-throw
+		//VirtualProtect(throwBulletMovementTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(throwBulletMovementTarget, sizeof(throwBulletMovementOrigin), throwBulletMovementOrigin, sizeof(throwBulletMovementOrigin));
+		//VirtualProtect(throwBulletMovementTarget, 6, old, &old);
+		//// can attack zombies behind plants
+		//VirtualProtect(attackBehindTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(attackBehindTarget, sizeof(attackBehindOrigin), attackBehindOrigin, sizeof(attackBehindOrigin));
+		//VirtualProtect(attackBehindTarget, 6, old, &old);
+		//// star auto track
+		//VirtualProtect(starPatchTarget, 6, PAGE_EXECUTE_READWRITE, &old);
+		//memcpy_s(starPatchTarget, sizeof(starPatchOrigin), starPatchOrigin, sizeof(starPatchOrigin));
+		//VirtualProtect(starPatchTarget, 6, old, &old);
 	}
 }
 
@@ -520,12 +565,12 @@ ZombieEatPlant oriZombieEatPlant;
 __declspec(naked) void detourZombieEatPlant() {
 	__asm {
 		pushad
-		cmp dword ptr [ecx+0x40], 0xF
+		cmp dword ptr[ecx + 0x40], 0xF
 		jg finish
-		mov dword ptr [ecx+0x24], 0x11
+		mov dword ptr[ecx + 0x24], 0x11
 		finish:
 		popad
-		jmp oriZombieEatPlant
+			jmp oriZombieEatPlant
 	}
 }
 
@@ -559,24 +604,67 @@ NormalBeanPlantAttackSpeedFn oriNormalBeanPlantAttackSpeedFn;
 __declspec(naked) void detourSetNormalBeanPlantAttackSpeedFn() {
 	__asm {
 		pushad
+		mov eax, 0x729670
+		mov eax, ds: [eax]
+		mov eax, ds : [eax + 0x868]
+		mov eax, ds : [eax + 0xB8]
+		test eax, eax	// 判断僵尸数量为0
+		je Finish
 		mov[esi + 0x90], 2
+		Finish :
 		push 140
-		fild ds: [esp]
+		fild ds : [esp]
 		fld attackSpeedRate
 		fmulp   st(1), st(0)
 		fistp ds : [esp]
 		mov ebx, 150
 		sub ebx, ds : [esp]
-		mov [esi+0x5C], ebx
+		mov[esi + 0x5C], ebx
 		pop ecx
 		popad
 		jmp oriNormalBeanPlantAttackSpeedFn
 	}
 }
 
+typedef void(*OtherPlantAttackSpeedFn)();
+OtherPlantAttackSpeedFn oriOtherPlantAttackSpeedFn;
+
+__declspec(naked) void detourSetOtherPlantAttackSpeedFn() {
+	__asm {
+		pushad
+		mov eax, 0x729670
+		mov eax, ds: [eax]
+		mov eax, ds : [eax + 0x868]
+		mov eax, ds : [eax + 0xB8]
+		test eax, eax	// 判断僵尸数量为0
+		je Finish
+		mov[esi + 0x90], 2
+		Finish :
+		push 140
+		fild ds : [esp]
+		fld attackSpeedRate
+		fmulp   st(1), st(0)
+		fistp ds : [esp]
+		mov ebx, 150
+		sub ebx, ds : [esp]
+		mov[esi + 0x5C], ebx
+		pop ecx
+
+		popad
+		jmp oriOtherPlantAttackSpeedFn
+	}
+}
+
 void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p)
 {
 	static std::atomic<bool> isCreateHook = false;
+	// Star, watermalen, corn, fume-shroom, puff, scaredy
+	static std::vector<DWORD> otherPlant90 = { 0x46306E, 0x462BBC, 0x462B89, 0x462A86, 0x462ADB + 6, 0x462AF5 + 6,  0x4629EE + 1, 0x462DA2 + 6, /*splitpea*/0x46293A + 6 };
+	static std::vector<DWORD> otherPlant90Origin = { 0x28, 0x24, 0x1E, 0x32, 0x1D, 0x19, 0x20, 0x23, 0x1A };
+
+	static std::vector<DWORD> otherPlant90Byte = { /*仙人掌*/0x462BA4,  /*大喷菇*/0x4682E5+2, /*大大喷菇*/0x468327+2, 0x468360 +2, /*机枪射手*/0x468488 + 2, /*猫草*/0x4684B0 + 6, /*三巨头*/0x4684EA + 2};
+	static std::vector<BYTE> otherPlant90OriginByte = { 0x23, 0xF, 0x6C, 0x7E, 0x12, 0x13, 0x12};
+
 	bool expect = false;
 	// 具体修改逻辑在函数462840中
 	if (p->flag)
@@ -589,16 +677,34 @@ void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p)
 			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)0x462990;
 			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)TramHook32((BYTE*)oriNormalBeanPlantAttackSpeedFn, (BYTE*)detourSetNormalBeanPlantAttackSpeedFn, 10);
 			oriNormalBeanPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)((DWORD)oriNormalBeanPlantAttackSpeedFn + 10);
-
+			// nop掉其他多发的射手
 			DWORD prt;
 			auto je1 = (LPVOID)0x46299D;
 			VirtualProtect(je1, 2, PAGE_EXECUTE_READWRITE, &prt);
 			*(WORD*)je1 = 0x28EB;
 			VirtualProtect(je1, 2, prt, &prt);
+
+			// 其他植物类型
+			oriOtherPlantAttackSpeedFn = (OtherPlantAttackSpeedFn)0x46322C;
+			oriOtherPlantAttackSpeedFn = (NormalBeanPlantAttackSpeedFn)TramHook32((BYTE*)oriOtherPlantAttackSpeedFn, (BYTE*)detourSetOtherPlantAttackSpeedFn, 6);
+
+			for (auto item : otherPlant90) {
+				VirtualProtect((LPVOID)item, 4, PAGE_EXECUTE_READWRITE, &prt);
+				*(DWORD*)item = 0x2;
+				VirtualProtect((LPVOID)item, 4, prt, &prt);
+			}
+
+			for (auto item : otherPlant90Byte) {
+				VirtualProtect((LPVOID)item, 1, PAGE_EXECUTE_READWRITE, &prt);
+				*(BYTE*)item = 0x1;
+				VirtualProtect((LPVOID)item, 1, prt, &prt);
+			}
+
+
 		}
 
 	}
-	else 
+	else
 	{
 		expect = true;
 		if (isCreateHook.compare_exchange_strong(expect, false)) {
@@ -618,13 +724,41 @@ void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p)
 			*(WORD*)je1 = 0x3174;
 			VirtualProtect(je1, 2, prt, &prt);
 
+			// 其他植物类型
+			start = (void*)0x46322C;
+			BYTE otherPlantOri[] = { 0x89, 0x4E, 0x58, 0x83, 0xF8, 0x12 };
+			VirtualProtect(start, 6, PAGE_EXECUTE_READWRITE, &prt);
+			memcpy_s(start, sizeof(otherPlantOri), otherPlantOri, sizeof(otherPlantOri));
+			VirtualProtect(start, 6, prt, &prt);
+
+			for (size_t i = 0; i < otherPlant90.size(); i++) {
+				auto item = (LPVOID)otherPlant90[i];
+				VirtualProtect(item, 4, PAGE_EXECUTE_READWRITE, &prt);
+				*(DWORD*)item = otherPlant90Origin[i];
+				VirtualProtect(item, 4, prt, &prt);
+			}
+
+			for (size_t i = 0; i < otherPlant90Byte.size(); i++) {
+				auto item = (LPVOID)otherPlant90Byte[i];
+				VirtualProtect(item, 1, PAGE_EXECUTE_READWRITE, &prt);
+				*(BYTE*)item = otherPlant90OriginByte[i];
+				VirtualProtect(item, 1, prt, &prt);
+			}
+
 			// 还原所有原来的CD
 			auto arr = getAllPlant();
 			for (auto plt : arr) {
 				int code = *(int*)(plt + 0x24);
-				if (code == 0 || code == 5 || code == 7 || code == 28 || code == 52) {
-					*(int*)(plt + 0x5C) = 150;
+				int isAttackType = *(int*)(plt + 0x48);
+				if (isAttackType) {
+					if (code == 32 || code == 34 || code == 39 || code == 44) {
+						*(int*)(plt + 0x5C) = 300;
+					}
+					else {
+						*(int*)(plt + 0x5C) = 150;
+					}
 				}
+
 			}
 		}
 
