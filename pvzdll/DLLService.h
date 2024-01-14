@@ -1,9 +1,14 @@
 #pragma once
-#include "pch.h"
+#include "common.h"
+#include "logger.h"
 
 struct DLLStatus {
 	DLLStatus() {
 		MH_Initialize();
+	}
+
+	~DLLStatus() {
+		MH_Uninitialize();
 	}
 };
 

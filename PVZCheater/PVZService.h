@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "common.h"
 #include "ProcessUtil.h"
 #include "logger.h"
 #include "dllParam.h"

@@ -114,28 +114,32 @@ char __usercall decSunCount@<al>(int a1@<ecx>, int decCount@<ebx>, int base868@<
 
   size: 0x14C
 
-  | Name(offset)      | Type  | desc                                            |      |
-  | ----------------- | ----- | ----------------------------------------------- | ---- |
-  | base(+0)          | void* |                                                 |      |
-  | base868(+4)       | void* |                                                 |      |
-  | XPos(+8)          | int   |                                                 |      |
-  | YPos(+C)          | int   |                                                 |      |
-  | XWidth(+10)       | int   |                                                 |      |
-  | YWidth(+14)       | int   |                                                 |      |
-  | isVisible         | byte  |                                                 |      |
-  | row(+1C)          | int   | The row index                                   |      |
-  | plantCode(+24)    | int   | Plant Type                                      |      |
-  | col(+28)          | int   | The col index                                   |      |
-  | CurHP(+40)        | int   |                                                 |      |
-  | FullHP(+44)       | int   |                                                 |      |
-  | IsAttackType(+48) | int   | true if plant can emit seed.                    |      |
-  |                   |       |                                                 |      |
-  | CurCD(+58)        | int   |                                                 |      |
-  | FullCD(+5C)       | int   |                                                 |      |
-  | Row(+88)          | int   |                                                 |      |
-  | EmitCD(+90)       | int   | Emit interval                                   |      |
-  | isDead(+141)      | byte  | 1 -> dead                                       |      |
-  | -(+148)           | int   | (thisAttr & 0xFFFF0000) == 0 means dead if true |      |
+  | Name(offset)         | Type  | desc                                                         |      |
+  | -------------------- | ----- | ------------------------------------------------------------ | ---- |
+  | base(+0)             | void* |                                                              |      |
+  | base868(+4)          | void* |                                                              |      |
+  | XPos(+8)             | int   |                                                              |      |
+  | YPos(+C)             | int   |                                                              |      |
+  | XWidth(+10)          | int   |                                                              |      |
+  | YWidth(+14)          | int   |                                                              |      |
+  | isVisible            | byte  |                                                              |      |
+  | row(+1C)             | int   | The row index                                                |      |
+  | plantCode(+24)       | int   | Plant Type                                                   |      |
+  | col(+28)             | int   | The col index                                                |      |
+  | CurHP(+40)           | int   |                                                              |      |
+  | FullHP(+44)          | int   |                                                              |      |
+  | IsAttackType(+48)    | int   | true if plant can emit seed.                                 |      |
+  | BombCD(+50)          | int   | atom, ice, squash, cherrybomb                                |      |
+  | ReloadCD(+54)        | int   | potato, chomper, magnet, corn cannon                         |      |
+  | CurCD(+58)           | int   |                                                              |      |
+  | FullCD(+5C)          | int   |                                                              |      |
+  | Row(+88)             | int   |                                                              |      |
+  | EmitCD(+90)          | int   | Emit interval                                                |      |
+  | UniqueID(+94)        | int   | plant unique ID, if two plants has same id, then shovel hover will lighten them simontaneounsly(src: 0x467399) |      |
+  | isDead(+141)         | byte  | 1 -> dead                                                    |      |
+  | isDead_2(+142)       | byte  | 1 -> dead                                                    |      |
+  | isDiableAttack(+143) | byte  | 1 -> not attack                                              |      |
+  | -(+148)              | int   | (thisAttr & 0xFFFF0000) == 0 means dead if true              |      |
 
 * Plant Array
 
@@ -167,7 +171,7 @@ add plant count: 00420C37
 * 阳光：00466E03
 * 射手：00466E10
 
-### 2. PlantCD
+### 2. Plant Action
 
 There have many types of CD.
 
@@ -178,9 +182,94 @@ There have many types of CD.
 | FullCD   | +5C                        | int  | 向日葵总CD                               |
 | EmitCD   | +90                        | int  | 发射倒计时CD                             |
 
+Plant attack process:
+
+```c++
+// 0x466B70
+int plantAction(Plant p){
+    if (p->alive) {
+        checkAndPerformAttack(p);	// // 0x468270
+        p->plantReloadCD > 0 ?  p->plantReloadCD-- : 0;
+        if (isBallingGameType()) sub_4666E0();
+        // 各种植物技能
+        
+        // 窝瓜  原子菇 冰冻菇 
+        
+        // 技能类植物扣减CD
+        decCD(p);
+        if(p->bombCD>0)p->bombCD--;
+        if (p->bombCD == 1) 
+    }
+}
+```
 
 
-### 3. Zombie
+
+```c++
+// 0x468270
+int checkAndPerformAttack(Plant p) {
+    if(p->alive) {
+        if (!p->emitCD) return;
+        p->emitCD--;
+        if (p->code == 大喷菇 && p->emitCD==15) bulletPlantAttackOnce(p, 0, p->row, 0);
+        else if (p->code == 机枪射手 && p->emitCD in [18, 35, 51, 68]) bulletPlantAttackOnce(p, 0, p->row, 0);
+        else if (p->code == 猫草 && p->emitCD == 19) {
+            Zombie z = plantScanGetFirstZombieByRow(0, p, p->row);
+            if (z)  bulletPlantAttackOnce(p, z, p->row, 0);
+        } else {
+            if (p->emitCD == 1) {
+                if (p->code == 三豌豆) {
+                    bulletPlantAttackOnce(p, 0, p->row + 1, 0);
+                    bulletPlantAttackOnce(p, 0, p->row, 0);
+                    bulletPlantAttackOnce(p, 0, p->row - 1, 0);
+                } else if(p->code == 前后射手) {
+                    bulletPlantAttackOnce(p, 0.0, p->row, 0);
+                } else {
+                    if (p->code not in [32, 34, 39, 44]) { // 非投手
+                        bulletPlantAttackOnce(p, 0,  p->row, 10)
+                    } else {
+                        // 投手
+                        Zombie z = plantScanGetFirstZombieByRow(0, p, p->row);
+            			if (z)  bulletPlantAttackOnce(p, z, p->row, 0);
+                    }
+                }
+            }
+        }
+        
+    }
+}
+```
+
+
+
+```c++
+int bulletPlantAttackOnce(Plant p, Zombie z, int row, int randomNumber) {
+    switch ( p->code )
+    {
+        case 大喷菇:                                    // 
+            plantCode_1 = sub_462630(plantAddr, 2);
+            if ( !*(_BYTE *)(*(_DWORD *)tmpPlantAddr + 0x9E5) )
+                return sub_51F6F0(*(float *)&a2);
+            return plantCode_1;
+        case 大大喷菇:                                    // 
+            return sub_462630(plantAddr, 2);
+        case star:                                    // 
+            return starFruitAttack(plantAddr);
+    }
+    // 根据植物设置子弹类型
+    if ( plantCode == 34 && randomNumber == 1 )   // 玉米射出黄油
+    	bulletCode = 12;
+    
+    // 设置子弹起始坐标
+    
+    // 生成子弹
+    spawnBullet(bltXPos, bltYPos, p->0x20-1, row, bulletCode);
+}
+```
+
+
+
+## 0x4. Zombie
 
 Add Zombie: 00420B87
 
@@ -215,11 +304,56 @@ Zombie Pos:
 
 0061607F
 
-### 5. Bullet
+## 5. Bullet
 
 Change Bullet Position: 471F70
 
 Spawn Bullet: 00470E38
+
+子弹运动类型：
+
+```c++
+// 462440
+//  *(_DWORD *)(bulletAddr + 0x74) = getPlantAttackType(plantAddr, 0);
+int __userpurge getPlantAttackType@<eax>(int plantAddr@<eax>, int a2)
+{
+  int plantCode; // eax
+
+  plantCode = *(_DWORD *)(plantAddr + 0x24);
+  switch ( plantCode )
+  {
+    case 26:                                    // 仙人掌
+      return (a2 != 1) + 1;                     // 01 or 10
+    case 2:                                     // 爆炸类
+    case 20:
+    case 47:
+    case 15:
+      return 0x7F;
+    case 39:                                    // 投手类
+    case 32:
+    case 34:
+    case 44:
+      return 0xD;                               // 1101
+    case 4:
+      return 0x4D;
+    case 17:                                    // 南瓜
+      return 0xD;
+    case 8:                                     // 蘑菇类
+    case 24:
+    case 10:
+    case 42:
+    case 6:
+      return 9;                                 // 1001
+    case 43:                                    // 自动指向类
+      return 0xB;                               // 1011
+    case 19:                                    // 海草
+      return 5;                                 // 0101
+  }
+  return plantCode != 50 ? 1 : 0x11;
+}
+```
+
+
 
 ### 6. 掉落物：
 

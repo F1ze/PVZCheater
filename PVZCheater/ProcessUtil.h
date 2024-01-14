@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "common.h"
 #include "TlHelp32.h"
 #include "filesystem"
 //#include "typeinfo"

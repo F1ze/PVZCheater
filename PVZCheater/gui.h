@@ -1,8 +1,9 @@
 #pragma once
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-#include "imgui_stdlib.h"
+#include "common.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_dx11.h"
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_stdlib.h"
 
 #include <d3d11.h>
 #include <tchar.h>

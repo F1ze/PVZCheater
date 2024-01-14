@@ -3,6 +3,9 @@
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/keywords/format.hpp>
+#include <boost/log/keywords/file_name.hpp>
 #include <boost/log/utility/setup/file.hpp>
 
 //BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -16,7 +19,7 @@
 // How to use boost lib: https://levelup.gitconnected.com/the-definite-guide-on-compiling-and-linking-boost-c-libraries-for-visual-studio-projects-c79464d7282d
 
 namespace logger {
-	const std::string LOG_FILE = "pvz_logger.log";
+	const std::string LOG_FILE = "PVZ_DLL.log";
 	void init();
 	void getLastError();
 }

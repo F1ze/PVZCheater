@@ -406,7 +406,7 @@ void mainGui()
 			ImGui::SeparatorText("Zombie Part");
 
 			{
-				static int p[2] = { 0, 2 };
+				static int p[2] = { 2, 7 };
 				ImGui::InputInt2("row/code", p); ImGui::SameLine();
 				if (ImGui::Button("Add")) pvzServ->AddZombie(p[0], p[1]);
 			}

@@ -396,7 +396,7 @@ void PVZService::AddPlant(DWORD row, DWORD col, DWORD code)
 
 void PVZService::AddZombie(DWORD row, DWORD code)
 {
-	if (this->isInjectedDLL && isInBattle() && row < 5) {
+	if (this->isInjectedDLL && isInBattle()) {
 		AddZombieParam* param = new AddZombieParam(row, code);
 		auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, param, sizeof(AddZombieParam));
 		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "AddZombie", { paddr });
