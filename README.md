@@ -122,7 +122,7 @@ char __usercall decSunCount@<al>(int a1@<ecx>, int decCount@<ebx>, int base868@<
   | YPos(+C)             | int   |                                                              |      |
   | XWidth(+10)          | int   |                                                              |      |
   | YWidth(+14)          | int   |                                                              |      |
-  | isVisible            | byte  |                                                              |      |
+  | isVisible(+18)       | byte  |                                                              |      |
   | row(+1C)             | int   | The row index                                                |      |
   | plantCode(+24)       | int   | Plant Type                                                   |      |
   | col(+28)             | int   | The col index                                                |      |
@@ -271,25 +271,47 @@ int bulletPlantAttackOnce(Plant p, Zombie z, int row, int randomNumber) {
 
 ## 0x4. Zombie
 
+### 1. Zombie Info
+
+* Zombie Struct:
+
+  size: 0x168
+
+  | Name(offset)       | Type  | desc                                                         |      |
+  | ------------------ | ----- | ------------------------------------------------------------ | ---- |
+  | base(+0)           | void* |                                                              |      |
+  | base868(+4)        | void* |                                                              |      |
+  | XPos(+8)           | int   |                                                              |      |
+  | YPos(+C)           | int   |                                                              |      |
+  | XWidth(+10)        | int   |                                                              |      |
+  | YWidth(+14)        | int   |                                                              |      |
+  | isVisible(+18)     | byte  |                                                              |      |
+  | row(+1C)           | int   | The row index                                                |      |
+  | code(+24)          | int   |                                                              |      |
+  | behaviorType(+28)  | int   | 1->fade away<br/>2->be black<br/>3->head execution<br/>32->ignore Plants |      |
+  | xPosF(+2C)         | float |                                                              |      |
+  | yPosF(+30)         | float |                                                              |      |
+  | slowDownSpeed(+34) | float | the speed of slowing down when meet snow pea.                |      |
+  | isCharm(+B8)       | byte  |                                                              |      |
+  | isBlowToDie(+B9)   | byte  |                                                              |      |
+  | isIgnorePlant(+BA) | byte  |                                                              |      |
+  | isJumpWater(+BD)   | byte  |                                                              |      |
+  | isEatOnion(+BF)    | byte  |                                                              |      |
+  | curBlood(+C8)      | int   |                                                              |      |
+  | fullBlood(+CC)     | int   |                                                              |      |
+  | curShield(+D0)     | int   |                                                              |      |
+  | fullShield(+D4)    | int   |                                                              |      |
+  | isDead(+EC)        | byte  |                                                              |      |
+
+* 
+
+
+
 Add Zombie: 00420B87
 
 Zombie Walk: 0053B443
 
-Zombie Array Gap: 0x168
-
 Zombie Count decrese / add : 41E9E6
-
-Zombie Structure:
-
-* +8: XPos(int)	+2C (float)
-* +C: YPos(int)   +30(float)
-* +34：减速速度，为负数可以击退僵尸
-* +B8:是否魅惑
-* +b9: 是否被吹
-* +C8: 当前血量
-* +CC：总血量
-* +D0: 当前护盾值
-* +D4: 总护盾值
 
 Zombie blood decrease: 
 
@@ -355,13 +377,19 @@ int __userpurge getPlantAttackType@<eax>(int plantAddr@<eax>, int a2)
 
 
 
-### 6. 掉落物：
+## 6. 掉落物：
 
 0041EB4F：减少掉落物数量
 
 00420DF9：增加掉落物数量
 
 [[base868]+10C] = 掉落物数量
+
+添加掉落物函数：0040F400
+
+自然掉落：4163D0
+
+植物掉落：463370
 
 ## 0x2 函数
 

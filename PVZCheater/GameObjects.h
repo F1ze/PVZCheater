@@ -82,6 +82,7 @@ public:
 	BYTE isDead;
 private:
 	BYTE _r10[0x7B];
+	// +164 = zbArrLen | ((*(int *)(*(*base868+A8) + 0x14))++ << 16);
 public:
 	DWORD addr;
 public:
@@ -157,6 +158,8 @@ public:
 	BYTE isDead_2;
 	// 0x143
 	BYTE isDisableAttack;
+
+	// 0x145 是否高亮（铲子移动在植物上会高亮）
 private:
 	BYTE _r6[0x8];
 public:

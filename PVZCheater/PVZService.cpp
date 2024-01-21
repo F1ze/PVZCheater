@@ -340,6 +340,12 @@ void PVZService::TogglePlantRandomBullet(bool flag)
 	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "RandomBullet", { paddr });
 }
 
+void PVZService::SetPlantSpecificBullet(int bulletType)
+{
+	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &bulletType, sizeof(int));
+	ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "SetSpecificBullet", { paddr });
+}
+
 void PVZService::ToggleBombFullScreen(bool flag)
 {
 	auto paddr = ProcessUtil::AllocAndWrite(this->pHandle, &flag, sizeof(bool));

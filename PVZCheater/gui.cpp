@@ -281,6 +281,8 @@ void mainGui()
 			static int curSlot = 0;
 			static int curSlotCode = pvzServ->GetSlotCodeByIdx(curSlot);
 
+			static int specificBulletType = -1;
+
 			if (!isInitial)
 			{
 				SunCntNotDecrease = false;
@@ -369,8 +371,20 @@ void mainGui()
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				if (ImGui::Checkbox("Plant no sleep", &plantNoSleep)) pvzServ->TogglePlantNoSleep(plantNoSleep);
-				ImGui::TableSetColumnIndex(1);
-				if (ImGui::Checkbox("Random bullet", &randomBullet)) pvzServ->TogglePlantRandomBullet(randomBullet);
+				if (ImGui::TableSetColumnIndex(1)) {
+					if (ImGui::Checkbox("##Randombullet", &randomBullet)) pvzServ->TogglePlantRandomBullet(randomBullet);
+					ImGui::SameLine();
+					if (randomBullet) {
+						if (ImGui::InputInt("##SpecificBulletType", &specificBulletType)) {
+							if (specificBulletType > 13 || specificBulletType < -1) specificBulletType = -1;
+							pvzServ->SetPlantSpecificBullet(specificBulletType);
+						}
+					}
+					else {
+						ImGui::Text("Random bullet");
+						specificBulletType = -1;
+					}
+				}
 				ImGui::TableSetColumnIndex(2);
 				if (ImGui::Checkbox("Bomb Full Screen", &bombFullScreen)) pvzServ->ToggleBombFullScreen(bombFullScreen);
 				ImGui::TableNextRow();

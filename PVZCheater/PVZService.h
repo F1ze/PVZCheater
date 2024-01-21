@@ -89,6 +89,8 @@ public:
 
 	void TogglePlantRandomBullet(bool flag);
 
+	void SetPlantSpecificBullet(int bulletType);
+
 	void ToggleBombFullScreen(bool flag);
 
 	void ToggleBulletOverlay(bool flag);

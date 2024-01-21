@@ -1,5 +1,21 @@
 #include "DLLService.h"
 
+// 有些场景行数是5，有些场景行数是6
+// return: 0表示获取失败
+int GetRowCount()
+{
+
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = *(int*)((DWORD)hMod + 0x329670);
+	DWORD base868 = *(int*)(base + 0x868);
+	if (base868) {
+		DWORD scene = *(int*)(base868 + 0x5564);
+		if (scene == 2 || scene == 3) return 6;
+		else return 5;
+	}
+	return 0;
+}
+
 EXPORT void AddPlant(AddPlantParam* param)
 {
 	if (param->plantCode > 52) return;
@@ -14,8 +30,10 @@ EXPORT void AddPlant(AddPlantParam* param)
 
 	void* func = (void*)0x40FA10;
 
-	if (row > 4 && col > 8) {
-		for (int i = 0; i < 5; i++)
+	int rowCount = GetRowCount();
+
+	if (row >= rowCount && col > 8) {
+		for (int i = 0; i < rowCount; i++)
 			for (int j = 0; j < 9; j++) {
 				__asm {
 					mov edx, 0xffffffff
@@ -51,8 +69,8 @@ EXPORT void AddPlant(AddPlantParam* param)
 			}
 		}
 	}
-	else if (row > 4) {
-		for (int i = 0; i < 9; i++) {
+	else if (row >= rowCount) {
+		for (int i = 0; i < rowCount; i++) {
 			__asm {
 				mov edx, 0xffffffff
 				push edx
@@ -99,8 +117,10 @@ void AddZombie(AddZombieParam* param)
 
 	void* func = (void*)0x410700;
 
-	if (row > 4) {
-		for (DWORD i = 0; i < 5; i++) {
+	int rowCount = GetRowCount();
+
+	if (row > rowCount) {
+		for (DWORD i = 0; i < rowCount; i++) {
 			__asm {
 				mov eax, i
 				push eax
@@ -428,17 +448,28 @@ typedef void (*RandomBulletFn)();
 
 RandomBulletFn oriRandomBullet;
 
+DWORD SpecificBullet = -1;
+
 // https://stackoverflow.com/questions/4099026/how-to-hook-usercall-userpurge-spoils-functions
 __declspec(naked) void detourRandomBullet()
 {
 	__asm
 	{
 		pushad
+		cmp SpecificBullet, 13
+		jg IfStart
+		cmp SpecificBullet, 0
+		jge Specific
+		IfStart:
 		call rand
 		cdq
 		mov ecx, 13
 		idiv ecx
 		mov eax, edx
+		jmp EndIf
+		Specific:
+		mov eax, SpecificBullet
+		EndIf:
 		mov ss : [esp + 0x1C] , eax
 		popad
 		jmp oriRandomBullet
@@ -462,6 +493,13 @@ void RandomBullet(bool* flag)
 		VirtualProtect(start, 5, PAGE_EXECUTE_READWRITE, &prt);
 		memcpy_s(start, sizeof(ori), ori, sizeof(ori));
 		VirtualProtect(start, 5, prt, &prt);
+	}
+}
+
+void SetSpecificBullet(int* bulletType)
+{
+	if (bulletType != nullptr) {
+		SpecificBullet = *bulletType;
 	}
 }
 
