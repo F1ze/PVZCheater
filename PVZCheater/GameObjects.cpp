@@ -20,3 +20,10 @@ Bullet* parseBullet(DWORD startAddr, BulletType* raw)
     memcpy_s(b, sizeof(BulletType), raw, sizeof(BulletType));
     return b;
 }
+
+LittleCar* parseLittleCar(DWORD startAddr, LittleCarType* raw)
+{
+    LittleCar* c = new LittleCar(startAddr);
+    memcpy_s(c, sizeof(LittleCarType), raw, sizeof(LittleCarType));
+    return c;
+}

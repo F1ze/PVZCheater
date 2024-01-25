@@ -137,17 +137,14 @@ void PVZService::ToggleCardNoCD(bool flag)
 		
 		// normal purple
 		//0040FDF4
-		//ProcessUtil::Write<WORD>(this->pHandle, 0x40FDF4, 0x9090);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FDFD, 0x9090);
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FE0D, 0x01B0);
 		// corn galon
 		// 0040FFC7
-		//ProcessUtil::Write<WORD>(this->pHandle, 0x40FFC7, 0x9090);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FFD8, 0x9090);
-		ProcessUtil::Write<BYTE>(this->pHandle, 0x40FFEB, 0xEB);
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FFB6, 0x49EB);
 		// cat grass
 		// 0040FE3D
 		//ProcessUtil::Write<QWORD>(this->pHandle, 0x40FE3D, 0x448B909090909090);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FE4D, 0x6FEB);
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FED0, 0x01B0);
 
 		// purple card
 		// 1. 0040FDFD 90 90 / 75 01
@@ -159,14 +156,11 @@ void PVZService::ToggleCardNoCD(bool flag)
 		ProcessUtil::Write<WORD>(this->pHandle, 0x491E55, 0x147E);
 
 		//ProcessUtil::Write<WORD>(this->pHandle, 0x40FDF4, 0x1774);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FDFD, 0x0175);
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FE0D, 0xC78B);
 		// corn galon
-		//ProcessUtil::Write<WORD>(this->pHandle, 0x40FFC7, 0x3374);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FFD8, 0x1375);
-		ProcessUtil::Write<BYTE>(this->pHandle, 0x40FFEB, 0x75);
-
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FFB6, 0xD78B);
 		//ProcessUtil::Write<QWORD>(this->pHandle, 0x40FE3D, 0x448B0000008D840F);
-		ProcessUtil::Write<WORD>(this->pHandle, 0x40FE4D, 0x7075);
+		ProcessUtil::Write<WORD>(this->pHandle, 0x40FED0, 0xC78B);
 	}
 }
 
@@ -312,10 +306,37 @@ void PVZService::ToggleLockShovel(bool flag)
 				Sleep(200);
 			}
 			BOOST_LOG_TRIVIAL(info) << "ToggleLockShovel Thread exit" << std::endl;
+			finish = false;
 		});
 		t.detach();
 	}
 	else finish = true;
+}
+
+void PVZService::ToggleShowVaseInternal(bool flag)
+{
+	DWORD p1 = 0x451835;
+	if (flag) {
+		ProcessUtil::Write<WORD>(this->pHandle, p1, 0x61EB);
+	}
+	else {
+		ProcessUtil::Write<WORD>(this->pHandle, p1, 0x09EB);
+	}
+}
+
+void PVZService::ToggleProduceFastly(bool flag)
+{
+	DWORD p1 = 0x461607;
+	DWORD p2 = 0x46180F;
+	if (flag) {
+		ProcessUtil::Write<DWORD>(this->pHandle, p1, 0x8990FFB2);
+		ProcessUtil::Write<QWORD>(this->pHandle, p2, 0x584389909064E083);
+	}
+	else {
+		ProcessUtil::Write<DWORD>(this->pHandle, p1, 0x891C508B);
+		ProcessUtil::Write<QWORD>(this->pHandle, p2, 0x5843890000012C05);
+
+	}
 }
 
 void PVZService::ToggleZombieInvicible(bool flag)
@@ -494,6 +515,13 @@ void PVZService::EatOnionZombie(bool flag)
 	}
 }
 
+void PVZService::RestoreLittleCar()
+{
+	if (isInBattle()) {
+		ProcessUtil::RemoteCallDllFunc(this->pHandle, this->myDLLHModule, "RestoreLittleCar", { nullptr }, false);
+	}
+}
+
 void PVZService::killPlant(Plant* plt)
 {
 	if (isInBattle()) {
@@ -512,6 +540,20 @@ void PVZService::killBullet(Bullet* b)
 {
 	if (isInBattle()) {
 		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(b, b->isDead), 1);
+	}
+}
+
+void PVZService::killLittleCar(LittleCar* c)
+{
+	if (isInBattle()) {
+		ProcessUtil::Write<BYTE>(this->pHandle, GetMemAddr(c, c->isDead), 1);
+	}
+}
+
+void PVZService::EmitLittleCar(LittleCar* c)
+{
+	if (isInBattle()) {
+		ProcessUtil::Write<DWORD>(this->pHandle, GetMemAddr(c, c->behaviorType), 2);
 	}
 }
 
@@ -605,6 +647,35 @@ std::vector<Bullet*> PVZService::EnumerateBullet()
 		// 按照y坐标进行排序
 		std::sort(arr.begin(), arr.end(), [](Bullet* a, Bullet* b) {return a->yPos < b->yPos || (a->yPos == b->yPos && a->xPos < b->xPos); });
 
+	}
+	return arr;
+}
+
+std::vector<LittleCar*> PVZService::EnumerateLittleCar()
+{
+	std::vector<LittleCar*> arr;
+	if (isInBattle()) {
+
+		auto base868ptr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, (DWORD)0x400000, baseOffset);
+
+		auto carArrPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0x118 });
+		auto carCountPtr = ProcessUtil::ReadMultiLevelPointer(this->pHandle, base868ptr, { 0, 0x11C });
+		auto carArr = ProcessUtil::Read<DWORD>(this->pHandle, carArrPtr);
+		auto carArrLen = ProcessUtil::Read<DWORD>(this->pHandle, carCountPtr);
+		for (DWORD i = 0; i < carArrLen; i++, carArr += sizeof(LittleCarType))
+		{
+			BYTE sign0x30 = ProcessUtil::Read<BYTE>(this->pHandle, carArr + 0x30);
+			DWORD sign0x44 = ProcessUtil::Read<DWORD>(this->pHandle, carArr + 0x44);
+			if ((sign0x44 & 0xFFFF0000) != 0 && sign0x30 == 0) {
+				auto raw = ProcessUtil::ReadBytes<LittleCarType>(this->pHandle, carArr);
+				auto littleCar = parseLittleCar(carArr, raw);
+				delete[]raw;
+				arr.push_back(littleCar);
+				BOOST_LOG_TRIVIAL(info) << "LittleCar: " << carArr;
+			}
+		}
+		// 按照行进行排序
+		std::sort(arr.begin(), arr.end(), [](LittleCar* a, LittleCar* b) {return a->row < b->row; });
 	}
 	return arr;
 }

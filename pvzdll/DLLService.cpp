@@ -234,6 +234,47 @@ std::vector<DWORD> getAllPlant()
 
 }
 
+std::vector<DWORD> getAllLittleCar()
+{
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = (DWORD)hMod + 0x329670;
+
+	DWORD carArr = 0;
+	DWORD len = 0;
+
+	__asm {
+		pushad
+		mov eax, base
+		mov eax, ds: [eax]
+		mov eax, ds : [eax + 0x868]
+		test eax, eax
+		je NotInGame
+		mov ebx, ds : [eax + 0x118]
+		mov carArr, ebx
+		mov eax, ds : [eax + 0x11C]
+		mov len, eax
+		jmp Finish
+		NotInGame :
+		mov carArr, 0
+		Finish :
+		popad
+	}
+
+	std::vector<DWORD> arr;
+	if (carArr) {
+		const int carSz = 0x48;
+		DWORD arrEnd = carArr + len * carSz;
+
+		for (DWORD i = carArr; i < arrEnd; i += carSz)
+		{
+			BYTE sign = *(BYTE*)(i + 0x30);
+			int sign0x44 = *(int*)(i + 0x44);
+			if (!sign && (sign0x44 & 0xFFFF0000) != 0) arr.push_back(i);
+		}
+	}
+	return arr;
+}
+
 void FreezeAllZombie()
 {
 	HMODULE hMod = GetModuleHandle(NULL);
@@ -828,4 +869,27 @@ void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p)
 		}
 
 	}
+}
+
+void RestoreLittleCar()
+{
+	HMODULE hMod = GetModuleHandle(NULL);
+	DWORD base = (DWORD)hMod + 0x329670;
+
+	void* func = (void*)0x40E510;
+
+	auto cars = getAllLittleCar();
+	for (auto item : cars) *(BYTE*)(item + 0x30) = 1;
+
+	__asm {
+		mov eax, base
+		mov eax, ds: [eax]
+		mov eax, ds: [eax + 0x868]
+		push eax
+		call func
+	}
+
+	cars = getAllLittleCar();
+	for (auto item : cars) *(DWORD*)(item + 0x2C) = 0;
+	for (auto item : cars) *(BYTE*)(item + 0x31) = 1;
 }

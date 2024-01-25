@@ -249,7 +249,41 @@ enum BulletCode {
 	BEAN_1
 };
 
+typedef BYTE(LittleCarType)[0x48];
+
+struct LittleCar {
+private:
+	BYTE _r1[8];
+public:
+	// 0x8
+	float xPos;
+	float yPos;
+private:
+	BYTE _r2[4];
+public:
+	// 0x14
+	int row;
+private:
+	BYTE _r3[0x14];
+public:
+	// 0x2C, 行为方式，0-初始化车状态，1-就绪状态，2-碾压状态
+	int behaviorType;
+	// 0x30
+	BYTE isDead;
+private:
+	BYTE _r4[3];
+public:
+	// 0x34, the type of little car
+	int code;
+private:
+	BYTE _r5[0x14];
+public:
+	DWORD addr;
+	LittleCar(DWORD addr) : addr(addr) {};
+};
+
 // 将得到的数组转化为结构体
 Zombie* parseZombie(DWORD startAddr, ZombieType* raw);
 Plant* parsePlant(DWORD startAddr, PlantType* raw);
 Bullet* parseBullet(DWORD startAddr, BulletType* raw);
+LittleCar* parseLittleCar(DWORD startAddr, LittleCarType* raw);

@@ -275,6 +275,8 @@ void mainGui()
 			static bool bulletOverlay = false;
 			static bool bulletAutoTrack = false;
 			static bool enableAttackSpeed = false;
+			static bool showVaseInternal = false;
+			static bool produceFastly = false;
 
 			static int slotCount = 0;
 
@@ -303,6 +305,8 @@ void mainGui()
 				bulletOverlay = false;
 				bulletAutoTrack = false;
 				enableAttackSpeed = false;
+				showVaseInternal = false;
+				produceFastly = false;
 
 				slotCount = 0;
 				curSlot = 0;
@@ -347,6 +351,11 @@ void mainGui()
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				if (ImGui::Checkbox("Lock Shovel", &lockShovel)) pvzServ->ToggleLockShovel(lockShovel);
+				ImGui::TableSetColumnIndex(1);
+				if (ImGui::Checkbox("Show Vase", &showVaseInternal)) pvzServ->ToggleShowVaseInternal(showVaseInternal);
+				ImGui::TableSetColumnIndex(2);
+				if (ImGui::Button("Retore Car")) 
+					pvzServ->RestoreLittleCar();
 				ImGui::EndTable();
 			}
 
@@ -414,6 +423,8 @@ void mainGui()
 					
 					
 				}
+				ImGui::TableSetColumnIndex(2);
+				if (ImGui::Checkbox("Produce Fastly", &produceFastly)) pvzServ->ToggleProduceFastly(produceFastly);
 				ImGui::EndTable();
 			}
 
@@ -729,6 +740,89 @@ void watchWindow(bool isInitial)
 						sprintf_s(btnName, "K##blt-kill-%x", i);
 						if (ImGui::Button(btnName)) pvzServ->killBullet(bulletArr[i]);
 						ImGui::SetItemTooltip("Kill");
+					}
+
+
+
+
+				}
+				ImGui::EndTable();
+			}
+			ImGui::EndGroup();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Car address"))
+		{
+			ImGui::BeginGroup();
+			ImGui::SeparatorText("Car address");
+
+			static int car = 0;
+			static int item_current = 0;
+			static const char** items = nullptr;
+			static std::vector<LittleCar*> carArr;
+			static const int maxShowBulletCnt = 30;
+
+			if (!isInitial)
+			{
+				car = 0;
+				item_current = 0;
+				items = nullptr;
+			}
+
+			for (auto i : carArr) delete i;
+			carArr = pvzServ->EnumerateLittleCar();
+			car = min(carArr.size(), maxShowBulletCnt);
+
+			if (car > 0 && ImGui::BeginTable("CarTable", 5)) {
+				const char** labelArr = new const char* [car];
+				for (int i = 0; i < car; i++) {
+					std::stringstream ss;
+					ss << std::uppercase << std::hex << carArr[i]->addr;
+					auto s = ss.str();
+					labelArr[i] = new char[s.length() + 1];
+					strcpy((char*)labelArr[i], s.c_str());
+				}
+				items = labelArr;
+
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Addr");
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("Code");
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("row");
+				ImGui::TableSetColumnIndex(3);
+				ImGui::Text("Pos");
+				ImGui::TableSetColumnIndex(4);
+				ImGui::Text("Operate");
+
+
+
+				for (int i = 0; i < car; i++)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					if (ImGui::Selectable(items[i], false, ImGuiSelectableFlags_AllowDoubleClick))
+						if (ImGui::IsMouseDoubleClicked(0))
+							ImGui::SetClipboardText(items[i]);
+
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Text("%d", carArr[i]->code);
+					ImGui::TableSetColumnIndex(2);
+					ImGui::Text("%d", carArr[i]->row);
+					ImGui::TableSetColumnIndex(3);
+					ImGui::Text("(%.1f, %.1f)", carArr[i]->xPos, carArr[i]->yPos);
+					if (ImGui::TableSetColumnIndex(4)) {
+						char btnName[16];
+						sprintf_s(btnName, "K##car-kill-%x", i);
+						if (ImGui::Button(btnName)) pvzServ->killLittleCar(carArr[i]);
+						ImGui::SetItemTooltip("Kill");
+
+						ImGui::SameLine();
+
+						sprintf_s(btnName, "E##car-emit-%x", i);
+						if (ImGui::Button(btnName)) pvzServ->EmitLittleCar(carArr[i]);
+						ImGui::SetItemTooltip("Emit");
 					}
 
 

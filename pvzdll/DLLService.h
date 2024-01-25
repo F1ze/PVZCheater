@@ -74,3 +74,5 @@ struct SetPlantAttackSpeedParam
 };
 
 EXPORT void SetPlantAttackSpeed(SetPlantAttackSpeedParam* p);
+
+EXPORT void RestoreLittleCar();

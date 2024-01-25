@@ -83,6 +83,8 @@ public:
 	void TogglePlantInvicible(bool flag);
 	void TogglePlantLowHPSacrifice(bool flag);
 	void ToggleLockShovel(bool flag);
+	void ToggleShowVaseInternal(bool flag);
+	void ToggleProduceFastly(bool flag);
 
 
 	void ToggleZombieInvicible(bool flag);
@@ -114,15 +116,21 @@ public:
 	// flag: 1 -> all 0 -> random 
 	void EatOnionZombie(bool flag);
 
+	void RestoreLittleCar();
+
 	void killPlant(Plant* addr);
 	void killZombie(Zombie* addr);
 	void killBullet(Bullet* addr);
+	void killLittleCar(LittleCar* addr);
+
+	void EmitLittleCar(LittleCar* addr);
 	template<typename T>
 	void SetZombieAttr(Zombie *z, void* attr, T value);
 
 	std::vector<Zombie*> EnumerateZombie();
 	std::vector<Plant*> EnumeratePlants();
 	std::vector<Bullet*> EnumerateBullet();
+	std::vector<LittleCar*> EnumerateLittleCar();
 private:
 	DWORD GetNextZombie(DWORD startAddress);
 	DWORD GetNextPlant(DWORD startAddress);
